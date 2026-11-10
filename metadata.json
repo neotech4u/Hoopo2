@@ -1,0 +1,6 @@
+{
+  "name": "Hoopo Car Companion - Smart Automotive HUD & Navigation",
+  "description": "Smart automotive companion featuring real-time map navigation, Hoopo travel buddy alerts, Islamic prayer times, Travel Dua, FM radio, speed gauge, and weather/fuel station locators.",
+  "requestFramePermissions": ["geolocation", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
