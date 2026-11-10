@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Sliders,
   Settings,
+  Smartphone,
 } from 'lucide-react';
 
 import { SpeedGauge } from './components/SpeedGauge';
@@ -44,6 +45,7 @@ import { PetrolExpenseModal } from './components/PetrolExpenseModal';
 import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { AndroidApkModal } from './components/AndroidApkModal';
 
 import {
   checkSpeedSafety,
@@ -247,6 +249,7 @@ export default function App() {
   const [showTripModal, setShowTripModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showApkModal, setShowApkModal] = useState(false);
 
   // 3. Navigation & Map State
   const [activeRoute, setActiveRoute] = useState<RouteOption>(SAMPLE_ROUTES[0]);
@@ -786,6 +789,18 @@ export default function App() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Android APK Compilation & Install Button */}
+          <button
+            type="button"
+            onClick={() => setShowApkModal(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/60 text-xs font-bold text-emerald-300 transition-all shadow-sm"
+            aria-label="Install or compile Android APK"
+            title="Install or compile Hoopoe as an Android APK"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Install APK</span>
+          </button>
+
           {/* Finish Ride / Driving Rating Button */}
           <button
             type="button"
@@ -1093,6 +1108,12 @@ export default function App() {
         isOpen={showVoiceModal}
         onClose={() => setShowVoiceModal(false)}
         onExecuteCommand={handleExecuteVoiceCommand}
+      />
+
+      {/* Android APK Compilation & Install Modal */}
+      <AndroidApkModal
+        isOpen={showApkModal}
+        onClose={() => setShowApkModal(false)}
       />
     </div>
   );

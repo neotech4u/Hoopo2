@@ -1,0 +1,14 @@
+{
+  "appId": "com.hoopoe.carcompanion",
+  "appName": "Hoopoe Car Companion",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystoreAlias": ""
+    }
+  }
+}

@@ -1,6 +1,21 @@
 <!doctype html>
 <html lang="en" class="dark">
   <head>
+    <script>
+      // Gracefully handle Vite dev HMR WebSocket closures in Cloud Run preview
+      window.addEventListener('error', function (e) {
+        if (e && e.message && (e.message.indexOf('WebSocket') !== -1 || e.message.indexOf('vite') !== -1)) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        if (e && e.reason && String(e.reason).indexOf('WebSocket') !== -1) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      }, true);
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hoopo Car Companion - Smart Automotive HUD & Navigation</title>
@@ -9,7 +24,13 @@
     <meta property="og:description" content="Smart automotive companion featuring real-time map navigation, Hoopo travel buddy alerts, Islamic prayer times, Travel Dua, FM radio, speed gauge, and weather/fuel station locators." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" type="image/png" href="/assets/aistudio/hoopoe_logo_bedb9b31.png" />
+    <meta name="theme-color" content="#090d16" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hoopoe" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="/icon-192x192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Sans+Tamil:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
