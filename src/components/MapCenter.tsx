@@ -21,8 +21,17 @@ import {
   WifiOff,
   Database,
   Trash2,
+  ExternalLink,
+  Globe,
+  Loader2,
 } from 'lucide-react';
 import { FuelStation, RouteOption, WeatherCondition } from '../utils/companionLogic';
+import {
+  searchPlacesLive,
+  calculateLiveRoute,
+  GOOGLE_MAPS_TILES,
+  LivePlaceResult,
+} from '../utils/routingAndGeocoding';
 
 export interface SearchDestination {
   id: string;
@@ -38,82 +47,118 @@ export interface SearchDestination {
 
 export const PRESET_SEARCH_DESTINATIONS: SearchDestination[] = [
   {
-    id: 'dest-airport',
-    name: 'King Khalid International Airport (RUH)',
+    id: 'dest-airport-chennai',
+    name: 'Chennai International Airport (MAA)',
     category: 'Airport',
-    address: 'Airport Expressway, Terminal 2',
-    distanceKm: 34.5,
-    durationMins: 26,
-    lat: 24.9576,
-    lng: 46.6988,
+    address: 'Grand Southern Trunk (GST) Rd, Meenambakkam, Chennai',
+    distanceKm: 14.2,
+    durationMins: 22,
+    lat: 12.9941,
+    lng: 80.1709,
     routeWaypoints: [
-      [24.7136, 46.6753],
-      [24.7500, 46.6800],
-      [24.8100, 46.7000],
-      [24.8800, 46.7200],
-      [24.9576, 46.6988],
+      [12.9249, 80.1000],
+      [12.9450, 80.1250],
+      [12.9700, 80.1500],
+      [12.9941, 80.1709],
     ],
   },
   {
-    id: 'dest-mosque',
-    name: 'King Fahd Grand Mosque & Roadside Musalla',
+    id: 'dest-mosque-nagore',
+    name: 'Nagore Dargah & Seaside Musalla',
     category: 'Mosque',
-    address: 'King Fahd Branch Rd, Al Murabba',
-    distanceKm: 12.8,
-    durationMins: 14,
-    lat: 24.6900,
-    lng: 46.7100,
+    address: 'Nagore Beach Rd, Nagapattinam (via ECR)',
+    distanceKm: 165.0,
+    durationMins: 140,
+    lat: 10.8197,
+    lng: 79.8457,
     routeWaypoints: [
-      [24.7136, 46.6753],
-      [24.7050, 46.6900],
-      [24.6900, 46.7100],
+      [12.9050, 80.2520],
+      [12.6269, 80.1927],
+      [11.9338, 79.8322],
+      [11.7480, 79.7714],
+      [10.8197, 79.8457],
     ],
   },
   {
-    id: 'dest-aramco',
-    name: 'Aramco Oasis Service Plaza',
+    id: 'dest-thousand-lights',
+    name: 'Thousand Lights Historic Mosque',
+    category: 'Mosque',
+    address: 'Anna Salai, Thousand Lights, Central Chennai',
+    distanceKm: 18.5,
+    durationMins: 28,
+    lat: 13.0569,
+    lng: 80.2520,
+    routeWaypoints: [
+      [12.9249, 80.1000],
+      [12.9600, 80.1500],
+      [13.0100, 80.2100],
+      [13.0569, 80.2520],
+    ],
+  },
+  {
+    id: 'dest-ioc-swagat',
+    name: 'Indian Oil Swagat Highway Hub (Ulundurpet)',
     category: 'Plaza',
-    address: 'Highway 65, Km 24 Oasis Point',
-    distanceKm: 24.0,
-    durationMins: 18,
-    lat: 24.8350,
-    lng: 46.7900,
+    address: 'GST Expressway, NH 45 Ulundurpet Bypass',
+    distanceKm: 132.0,
+    durationMins: 98,
+    lat: 11.6912,
+    lng: 79.2908,
     routeWaypoints: [
-      [24.7136, 46.6753],
-      [24.7600, 46.7200],
-      [24.8350, 46.7900],
+      [12.9249, 80.1000],
+      [12.6841, 79.9836],
+      [12.2334, 79.6508],
+      [11.9398, 79.4925],
+      [11.6912, 79.2908],
     ],
   },
   {
-    id: 'dest-dq',
-    name: 'Diplomatic Quarter & Cultural Garden',
-    category: 'City Center',
-    address: 'Amr Ad Damri St, Al Safarat',
-    distanceKm: 16.2,
-    durationMins: 16,
-    lat: 24.6850,
-    lng: 46.6200,
-    routeWaypoints: [
-      [24.7136, 46.6753],
-      [24.7000, 46.6500],
-      [24.6850, 46.6200],
-    ],
-  },
-  {
-    id: 'dest-coastal',
-    name: 'Red Sea Coastal Motorway Hub',
+    id: 'dest-mahabs',
+    name: 'Mahabalipuram Coastal Heritage Point',
     category: 'Highway',
-    address: 'Coastal Interstate Expressway 65',
-    distanceKm: 58.0,
-    durationMins: 42,
-    lat: 24.9800,
-    lng: 46.9200,
+    address: 'East Coast Road (ECR), Mahabalipuram',
+    distanceKm: 42.0,
+    durationMins: 38,
+    lat: 12.6269,
+    lng: 80.1927,
     routeWaypoints: [
-      [24.7136, 46.6753],
-      [24.7500, 46.7200],
-      [24.8200, 46.8000],
-      [24.9000, 46.8600],
-      [24.9800, 46.9200],
+      [12.9050, 80.2520],
+      [12.7930, 80.2450],
+      [12.6269, 80.1927],
+    ],
+  },
+  {
+    id: 'dest-madurai',
+    name: 'Madurai Central & Goripalayam Hub',
+    category: 'City Center',
+    address: 'Alagar Kovil Rd, Goripalayam, Madurai (NH 45/44)',
+    distanceKm: 415.0,
+    durationMins: 290,
+    lat: 9.9252,
+    lng: 78.1198,
+    routeWaypoints: [
+      [12.9249, 80.1000],
+      [11.9398, 79.4925],
+      [11.6912, 79.2908],
+      [10.7905, 78.7047],
+      [9.9252, 78.1198],
+    ],
+  },
+  {
+    id: 'dest-coimbatore',
+    name: 'Coimbatore Airport & IT Corridor',
+    category: 'Airport',
+    address: 'Avinashi Road, Civil Aerodrome Post, Coimbatore',
+    distanceKm: 480.0,
+    durationMins: 340,
+    lat: 11.0300,
+    lng: 77.0434,
+    routeWaypoints: [
+      [12.9249, 80.1000],
+      [12.6841, 79.9836],
+      [11.6643, 78.1460],
+      [11.4420, 77.6820],
+      [11.0300, 77.0434],
     ],
   },
 ];
@@ -172,15 +217,25 @@ export const MapCenter: React.FC<MapCenterProps> = ({
   const trafficLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const fuelLayerGroupRef = useRef<L.LayerGroup | null>(null);
   const rainLayerGroupRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   const [followCar, setFollowCar] = useState(true);
   const [navStepIndex, setNavStepIndex] = useState(0);
+
+  // Map Tile Style State (Google Maps Roadmap vs Satellite vs OSM)
+  const [mapTileType, setMapTileType] = useState<'google' | 'satellite' | 'osm'>('google');
 
   // Search & Direction state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<SearchDestination | null>(null);
   const [directionPanelOpen, setDirectionPanelOpen] = useState(false);
+  const [liveSearchResults, setLiveSearchResults] = useState<LivePlaceResult[]>([]);
+  const [isSearchingLive, setIsSearchingLive] = useState(false);
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+  const [activeNavInstructions, setActiveNavInstructions] = useState<
+    Array<{ distance: string; text: string; icon: string }>
+  >([]);
 
   // Offline Google Map Saving & Caching State
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
@@ -216,6 +271,25 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       return 'Today, Auto-Synced';
     }
   });
+
+  // Live Geocoding Search Effect (OpenStreetMap Nominatim)
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setLiveSearchResults([]);
+      setIsSearchingLive(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingLive(true);
+      const userPos = realUserLocation || activeRoute.waypoints[0] || [12.9249, 80.1000];
+      const results = await searchPlacesLive(searchQuery, userPos[0], userPos[1]);
+      setLiveSearchResults(results);
+      setIsSearchingLive(false);
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, realUserLocation, activeRoute.waypoints]);
 
   const handleToggleOfflineMode = () => {
     const next = !isOfflineModeActive;
@@ -290,13 +364,13 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     setLastCacheDate('Cleared');
   };
 
-  // Turn-by-turn guidance cues
+  // Turn-by-turn guidance cues (Tamil Nadu GST Road corridor)
   const navInstructions = [
-    { distance: '450 m', text: 'Continue straight on King Fahd Expressway', icon: 'straight' },
-    { distance: '1.2 km', text: 'Take exit 14B toward Airport / Eastern Ring', icon: 'right' },
-    { distance: '3.8 km', text: 'Keep left at the fork towards Coastal Highway', icon: 'left' },
-    { distance: '8.4 km', text: 'Merge onto Motorway Route 65', icon: 'straight' },
-    { distance: '12 km', text: 'Arrive at destination on your right', icon: 'destination' },
+    { distance: '500 m', text: 'Continue straight on Grand Southern Trunk (GST) Road / NH 45', icon: 'straight' },
+    { distance: '1.8 km', text: 'Take exit toward Chengalpattu / Tindivanam Expressway', icon: 'right' },
+    { distance: '4.2 km', text: 'Keep left on the flyover past Ulundurpet Swagat Plaza', icon: 'left' },
+    { distance: '8.5 km', text: 'Merge smoothly onto NH 38 towards Tiruchirappalli', icon: 'straight' },
+    { distance: '12 km', text: 'Arrive at destination on your left', icon: 'destination' },
   ];
 
   // Initialize Leaflet Map
@@ -304,7 +378,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const startCoord = realUserLocation || activeRoute.waypoints[0] || [24.7136, 46.6753];
+      const startCoord = realUserLocation || activeRoute.waypoints[0] || [12.9249, 80.1000];
       const map = L.map(mapContainerRef.current, {
         center: startCoord,
         zoom: 13,
@@ -312,12 +386,22 @@ export const MapCenter: React.FC<MapCenterProps> = ({
         attributionControl: false,
       });
 
-      // Dark cockpit styled tiles
-      const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        className: nightMode ? 'dark-tiles' : '',
-        maxZoom: 18,
+      // Cockpit styled tiles (Google Maps Roadmap by default)
+      let initialUrl = GOOGLE_MAPS_TILES.roadmap;
+      let initialClass = nightMode ? 'dark-tiles' : '';
+      if (mapTileType === 'satellite') {
+        initialUrl = GOOGLE_MAPS_TILES.satellite;
+        initialClass = '';
+      } else if (mapTileType === 'osm') {
+        initialUrl = GOOGLE_MAPS_TILES.osm;
+      }
+
+      const tileLayer = L.tileLayer(initialUrl, {
+        className: initialClass,
+        maxZoom: 20,
       });
       tileLayer.addTo(map);
+      tileLayerRef.current = tileLayer;
 
       // Create car HUD custom marker
       const carIcon = L.divIcon({
@@ -353,6 +437,33 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       }
     };
   }, []);
+
+  // Dynamically update tile layers (Google Maps Roadmap vs Satellite vs OSM)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    let url = GOOGLE_MAPS_TILES.roadmap;
+    let className = nightMode && mapTileType !== 'satellite' ? 'dark-tiles' : '';
+
+    if (mapTileType === 'satellite') {
+      url = GOOGLE_MAPS_TILES.satellite;
+      className = '';
+    } else if (mapTileType === 'osm') {
+      url = GOOGLE_MAPS_TILES.osm;
+    }
+
+    const newTileLayer = L.tileLayer(url, {
+      className,
+      maxZoom: 20,
+    });
+    newTileLayer.addTo(map);
+    tileLayerRef.current = newTileLayer;
+  }, [mapTileType, nightMode]);
 
   // Handle Real User Location updates (GPS)
   useEffect(() => {
@@ -585,15 +696,55 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       d.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle Destination Select & Start Navigation
-  const handleSelectDestination = (dest: SearchDestination) => {
-    setSelectedDestination(dest);
+  // Handle Destination Select & Start Navigation (with Live OSRM Road Calculation)
+  const handleSelectDestination = async (dest: SearchDestination | LivePlaceResult) => {
+    const startCoord = realUserLocation || activeRoute.waypoints[0] || [12.9249, 80.1000];
+
+    const targetDest: SearchDestination = {
+      id: dest.id,
+      name: dest.name,
+      category: dest.category,
+      address: dest.address,
+      distanceKm: dest.distanceKm || 15,
+      durationMins: (dest as any).durationMins || Math.max(10, Math.round((dest.distanceKm || 15) * 1.2)),
+      lat: dest.lat,
+      lng: dest.lng,
+      routeWaypoints: (dest as any).routeWaypoints || [startCoord, [dest.lat, dest.lng]],
+    };
+
+    setSelectedDestination(targetDest);
     setDirectionPanelOpen(true);
     setIsSearchOpen(false);
 
     // Pan map to destination
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([dest.lat, dest.lng], 13, { duration: 1.0 });
+    }
+
+    // Call live OSRM road routing engine
+    setIsCalculatingRoute(true);
+    const liveRoute = await calculateLiveRoute(startCoord[0], startCoord[1], dest.lat, dest.lng);
+    setIsCalculatingRoute(false);
+
+    if (liveRoute && liveRoute.waypoints.length > 0) {
+      targetDest.routeWaypoints = liveRoute.waypoints;
+      targetDest.distanceKm = liveRoute.distanceKm;
+      targetDest.durationMins = liveRoute.durationMins;
+      setSelectedDestination({ ...targetDest });
+      setActiveNavInstructions(liveRoute.steps);
+
+      if (mapInstanceRef.current) {
+        if (routeLayerRef.current) {
+          mapInstanceRef.current.removeLayer(routeLayerRef.current);
+        }
+        const polyline = L.polyline(liveRoute.waypoints, {
+          color: '#38bdf8',
+          weight: 6,
+          opacity: 0.9,
+        }).addTo(mapInstanceRef.current);
+        routeLayerRef.current = polyline;
+        mapInstanceRef.current.fitBounds(polyline.getBounds(), { padding: [50, 50] });
+      }
     }
   };
 
@@ -619,7 +770,8 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     setSearchQuery('');
   };
 
-  const currentNav = navInstructions[navStepIndex] || navInstructions[0];
+  const navList = activeNavInstructions.length > 0 ? activeNavInstructions : navInstructions;
+  const currentNav = navList[navStepIndex] || navList[0];
 
   return (
     <div
@@ -695,8 +847,22 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             )}
           </div>
 
+          {/* Live Search Status */}
+          {isSearchingLive && (
+            <div className="flex items-center gap-1.5 py-1.5 px-2 text-[11px] text-amber-300 font-medium border-b border-slate-800/80">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+              <span>Searching live places across Tamil Nadu & worldwide...</span>
+            </div>
+          )}
+
           {/* Results List */}
-          <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+          <div className="mt-2 space-y-1 max-h-56 overflow-y-auto">
+            {/* 1. Presets Header */}
+            {filteredDestinations.length > 0 && (
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 pt-0.5">
+                Popular Destinations
+              </div>
+            )}
             {filteredDestinations.map((dest) => (
               <button
                 key={dest.id}
@@ -725,9 +891,45 @@ export const MapCenter: React.FC<MapCenterProps> = ({
               </button>
             ))}
 
-            {filteredDestinations.length === 0 && (
+            {/* 2. Live Online Results from Nominatim */}
+            {liveSearchResults.length > 0 && (
+              <div className="text-[10px] font-bold text-sky-400 uppercase tracking-wider px-1 pt-2 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-sky-400" />
+                <span>Live Map Places</span>
+              </div>
+            )}
+            {liveSearchResults.map((place) => (
+              <button
+                key={place.id}
+                type="button"
+                onClick={() => handleSelectDestination(place)}
+                className="w-full text-left p-2 rounded-xl bg-sky-950/30 hover:bg-sky-900/40 border border-sky-800/40 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                    <Globe className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-white truncate group-hover:text-sky-300">
+                      {place.name}
+                    </div>
+                    <div className="text-[10px] text-slate-400 truncate">{place.address}</div>
+                  </div>
+                </div>
+
+                {place.distanceKm !== undefined && (
+                  <div className="text-right shrink-0 pl-2">
+                    <span className="text-xs font-bold text-sky-400 font-mono">
+                      {place.distanceKm} km
+                    </span>
+                  </div>
+                )}
+              </button>
+            ))}
+
+            {filteredDestinations.length === 0 && liveSearchResults.length === 0 && !isSearchingLive && (
               <div className="text-center py-4 text-xs text-slate-400">
-                No matching destination found. Try another landmark name.
+                No matching destination found. Type any place, street, or city name.
               </div>
             )}
           </div>
@@ -770,18 +972,25 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 my-2.5 p-2 bg-slate-950/70 rounded-xl border border-slate-800 text-xs">
-            <div>
-              <span className="text-[10px] text-slate-400">Total Distance</span>
-              <div className="font-bold text-white font-mono">{selectedDestination.distanceKm} km</div>
+          {isCalculatingRoute ? (
+            <div className="flex items-center justify-center gap-2 py-3 text-xs text-sky-300 font-medium">
+              <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+              <span>Calculating real road path via OSRM...</span>
             </div>
-            <div>
-              <span className="text-[10px] text-slate-400">Estimated Drive</span>
-              <div className="font-bold text-emerald-400 font-mono">
-                {selectedDestination.durationMins} minutes
+          ) : (
+            <div className="grid grid-cols-2 gap-2 my-2.5 p-2 bg-slate-950/70 rounded-xl border border-slate-800 text-xs">
+              <div>
+                <span className="text-[10px] text-slate-400">Total Distance</span>
+                <div className="font-bold text-white font-mono">{selectedDestination.distanceKm} km</div>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400">Estimated Drive</span>
+                <div className="font-bold text-emerald-400 font-mono">
+                  {selectedDestination.durationMins} minutes
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center gap-2">
             <button
@@ -790,12 +999,22 @@ export const MapCenter: React.FC<MapCenterProps> = ({
               className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 transition-all"
             >
               <Navigation className="w-3.5 h-3.5" />
-              <span>Start Navigation To Here</span>
+              <span>Start Cockpit HUD Route</span>
             </button>
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${selectedDestination.lat},${selectedDestination.lng}&travelmode=driving`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1 transition-colors"
+              title="Open route in Google Maps App"
+            >
+              <span>Google Maps</span>
+              <ExternalLink className="w-3 h-3 text-blue-400" />
+            </a>
             <button
               type="button"
               onClick={() => setDirectionPanelOpen(false)}
-              className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+              className="py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-400"
             >
               Cancel
             </button>
@@ -846,6 +1065,20 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
         {/* Layer Toggles & GPS Location Access */}
         <div className="flex items-center gap-1">
+          {/* Map Layer Mode Toggle (Google Road vs Satellite vs OSM) */}
+          <button
+            type="button"
+            onClick={() => {
+              setMapTileType((prev) => (prev === 'google' ? 'satellite' : prev === 'satellite' ? 'osm' : 'google'));
+            }}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold border bg-slate-800/80 border-slate-750 text-amber-300 hover:text-white transition-all shadow-sm"
+            aria-label="Switch Map Provider Style"
+            title="Switch Map Tiles (Google Roadmap / Satellite / OSM)"
+          >
+            <Globe className="w-3 h-3 text-amber-400" />
+            <span className="capitalize">{mapTileType === 'google' ? 'Google' : mapTileType === 'satellite' ? 'Satellite' : 'OSM'}</span>
+          </button>
+
           <button
             type="button"
             onClick={onRequestLocation}

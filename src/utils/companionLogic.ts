@@ -20,7 +20,7 @@ export interface WeatherCondition {
 export interface FuelStation {
   id: string;
   name: string;
-  brand: 'Shell' | 'Aramco' | 'Petronas' | 'BP' | 'Chevron' | 'Adnoc';
+  brand: 'Shell' | 'Aramco' | 'Petronas' | 'BP' | 'Chevron' | 'Adnoc' | 'Indian Oil' | 'BPCL' | 'HPCL' | 'Reliance' | 'Nayara';
   distanceKm: number;
   fuelPrice: number; // e.g. $1.35/L
   amenities: string[];

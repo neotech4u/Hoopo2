@@ -7,6 +7,7 @@ interface PrayerTimesWidgetProps {
   currentPrayer: PrayerTime | null;
   nextPrayer: PrayerTime;
   minutesRemaining: number;
+  qiblaBearing?: number;
   onLocateNearestMosque: () => void;
 }
 
@@ -15,6 +16,7 @@ export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
   currentPrayer,
   nextPrayer,
   minutesRemaining,
+  qiblaBearing = 114,
   onLocateNearestMosque,
 }) => {
   const [showFullSchedule, setShowFullSchedule] = useState(false);
@@ -50,7 +52,7 @@ export const PrayerTimesWidget: React.FC<PrayerTimesWidgetProps> = ({
         {/* Qibla Direction Pill */}
         <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/70 border border-slate-800 text-[10px] font-bold text-emerald-300">
           <Compass className="w-3 h-3 text-emerald-400" />
-          <span>Qibla 114°</span>
+          <span>Qibla {Math.round(qiblaBearing)}°</span>
         </div>
       </div>
 

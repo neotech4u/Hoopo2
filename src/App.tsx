@@ -46,6 +46,7 @@ import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { AndroidApkModal } from './components/AndroidApkModal';
+import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 
 import {
   checkSpeedSafety,
@@ -73,145 +74,146 @@ import {
 } from './utils/companionLogic';
 import { soundEngine, speakHoopoMessage } from './utils/audioSynthesizer';
 
-// Realistic sample route coordinates
+// Realistic sample route coordinates across Tamil Nadu highways
 const SAMPLE_ROUTES: RouteOption[] = [
   {
     id: 'route-fast',
-    name: 'Fast Highway Route (Toll)',
+    name: 'Chennai to Madurai Express (GST Road / NH 45)',
     tag: 'Fastest',
-    distanceKm: 48,
-    durationMins: 32,
-    trafficLevel: 'moderate',
+    distanceKm: 128,
+    durationMins: 95,
+    trafficLevel: 'smooth',
     rainRisk: true,
     fuelStopsCount: 4,
     waypoints: [
-      [24.7136, 46.6753],
-      [24.7350, 46.6900],
-      [24.7600, 46.7200],
-      [24.7950, 46.7600],
-      [24.8350, 46.7900],
-      [24.8700, 46.8200],
-      [24.9100, 46.8500],
-      [24.9450, 46.8850],
-      [24.9800, 46.9200],
+      [12.9249, 80.1000], // Chennai Tambaram
+      [12.8250, 80.0450], // Maraimalai Nagar
+      [12.6841, 79.9836], // Chengalpattu Toll
+      [12.4820, 79.8820], // Madurantakam Bypass
+      [12.2334, 79.6508], // Tindivanam Highway Junction
+      [11.9398, 79.4925], // Villupuram Highway Hub
+      [11.6912, 79.2908], // Ulundurpet Swagat Plaza
+      [11.4500, 79.1200], // Veppur
+      [11.2342, 78.8812], // Perambalur
     ],
   },
   {
     id: 'route-coastal',
-    name: 'Scenic Coastal Highway',
+    name: 'East Coast Road (ECR Scenic Coastal)',
     tag: 'Scenic',
-    distanceKm: 56,
-    durationMins: 42,
+    distanceKm: 135,
+    durationMins: 110,
     trafficLevel: 'smooth',
     rainRisk: false,
     fuelStopsCount: 3,
     waypoints: [
-      [24.7136, 46.6753],
-      [24.7000, 46.7200],
-      [24.7300, 46.7800],
-      [24.7800, 46.8400],
-      [24.8500, 46.8900],
-      [24.9200, 46.9300],
-      [24.9800, 46.9200],
+      [12.9050, 80.2520], // Chennai Akkarai ECR
+      [12.7930, 80.2450], // Kovalam
+      [12.6269, 80.1927], // Mahabalipuram
+      [12.5020, 80.1550], // Kalpakkam
+      [12.1960, 79.9480], // Marakkanam
+      [11.9338, 79.8322], // Pondicherry Promenade
+      [11.7480, 79.7714], // Cuddalore Port
+      [10.8197, 79.8457], // Nagore Dargah & Coast
     ],
   },
   {
     id: 'route-eco',
-    name: 'Eco Green Express',
+    name: 'Salem - Coimbatore Expressway (NH 544)',
     tag: 'Eco-Friendly',
-    distanceKm: 45,
-    durationMins: 36,
+    distanceKm: 142,
+    durationMins: 105,
     trafficLevel: 'smooth',
     rainRisk: false,
-    fuelStopsCount: 2,
+    fuelStopsCount: 3,
     waypoints: [
-      [24.7136, 46.6753],
-      [24.7400, 46.7000],
-      [24.7800, 46.7400],
-      [24.8400, 46.8000],
-      [24.9000, 46.8600],
-      [24.9800, 46.9200],
+      [11.6643, 78.1460], // Salem Junction
+      [11.4880, 77.8680], // Sankari Toll
+      [11.4420, 77.6820], // Bhavani / Erode
+      [11.3500, 77.4900], // Perundurai
+      [11.1920, 77.2690], // Avinashi Bypass
+      [11.0168, 76.9558], // Coimbatore Gandhipuram
     ],
   },
 ];
 
-// Sample Fuel Stations along route
+// Sample Highway Fuel Plazas along Tamil Nadu Highways
 const SAMPLE_FUEL_STATIONS: FuelStation[] = [
   {
     id: 'st-1',
-    name: 'Aramco Oasis Service Plaza',
-    brand: 'Aramco',
-    distanceKm: 8.5,
-    fuelPrice: 1.28,
-    amenities: ['Highway Musalla', 'Halal Coffee', 'Restroom', 'EV Fast Charge'],
-    lat: 24.7600,
-    lng: 46.7200,
+    name: 'Indian Oil Swagat COCO Plaza',
+    brand: 'Indian Oil',
+    distanceKm: 14.5,
+    fuelPrice: 101.4,
+    amenities: ['Highway Musalla', 'A2B Restaurant', 'EV Fast Charge 60kW', 'Clean Restrooms'],
+    lat: 12.6841,
+    lng: 79.9836,
   },
   {
     id: 'st-2',
-    name: 'Shell Select Express',
-    brand: 'Shell',
-    distanceKm: 18.2,
-    fuelPrice: 1.34,
-    amenities: ['Air & Water', 'Prayer Area', '24/7 Car Wash', 'Fresh Market'],
-    lat: 24.8350,
-    lng: 46.7900,
+    name: 'BPCL Ghar Highway Outpost',
+    brand: 'BPCL',
+    distanceKm: 42.0,
+    fuelPrice: 101.2,
+    amenities: ['Prayer Hall', 'McDonalds & Cafe', '24/7 Air & Water', 'Dormitory'],
+    lat: 12.2334,
+    lng: 79.6508,
   },
   {
     id: 'st-3',
-    name: 'Petronas Highway Hub',
-    brand: 'Petronas',
-    distanceKm: 31.0,
-    fuelPrice: 1.31,
-    amenities: ['Air-Conditioned Musalla', 'EV Charger 150kW', 'Dine-in Halal Cafe'],
-    lat: 24.8700,
-    lng: 46.8200,
+    name: 'HPCL Samayapuram Highway Oasis',
+    brand: 'HPCL',
+    distanceKm: 78.5,
+    fuelPrice: 101.5,
+    amenities: ['Air-Conditioned Musalla', 'EV Fast Charge 120kW', 'South Indian Food Court'],
+    lat: 11.6912,
+    lng: 79.2908,
   },
   {
     id: 'st-4',
-    name: 'Adnoc Travel Center',
-    brand: 'Adnoc',
-    distanceKm: 42.4,
-    fuelPrice: 1.29,
-    amenities: ['Grand Musalla', 'Tire Service', 'Convenience Store'],
-    lat: 24.9450,
-    lng: 46.8850,
+    name: 'Shell Select Express Tambaram',
+    brand: 'Shell',
+    distanceKm: 95.0,
+    fuelPrice: 107.8,
+    amenities: ['Prayer Area', 'Shell Deli2go Fresh Market', '24/7 Car Care', 'EV Charger'],
+    lat: 12.9249,
+    lng: 80.1000,
   },
 ];
 
-// Weather forecasts along route
+// Weather forecasts along Tamil Nadu highway routes
 const SAMPLE_WEATHER: WeatherCondition[] = [
   {
-    location: 'Km 12 - Airport Expressway',
-    kmMark: 12,
+    location: 'Km 18 - Tambaram / Chengalpattu GST',
+    kmMark: 18,
     condition: 'Clear',
     riskLevel: 'low',
-    advisory: 'Clear visibility and dry road surface.',
+    advisory: 'Clear visibility and dry road surface along GST Road expressway.',
   },
   {
-    location: 'Km 34 - Valley Pass Highway',
-    kmMark: 34,
+    location: 'Km 65 - Tindivanam Coastal Sector',
+    kmMark: 65,
     condition: 'Rain',
     riskLevel: 'moderate',
-    advisory: 'Moderate rainfall expected. Maintain safe following distance and activate wipers.',
+    advisory: 'Moderate coastal monsoon showers expected. Maintain safe following distance and activate wipers.',
   },
   {
-    location: 'Km 46 - Northern Ring Interchange',
-    kmMark: 46,
+    location: 'Km 110 - Ulundurpet Toll Corridor',
+    kmMark: 110,
     condition: 'Cloudy',
     riskLevel: 'low',
-    advisory: 'Overcast skies with mild crosswinds.',
+    advisory: 'Pleasant overcast skies with smooth highway cruising conditions.',
   },
 ];
 
-// Daily Islamic prayer times
-const PRAYER_SCHEDULE: PrayerTime[] = [
-  { name: 'Fajr', arabicName: 'الفجر', time: '05:14' },
-  { name: 'Sunrise', arabicName: 'الشروق', time: '06:32' },
-  { name: 'Dhuhr', arabicName: 'الظهر', time: '12:22' },
-  { name: 'Asr', arabicName: 'العصر', time: '15:40' },
-  { name: 'Maghrib', arabicName: 'المغرب', time: '18:12' },
-  { name: 'Isha', arabicName: 'العشاء', time: '19:35' },
+// Default Islamic prayer times baseline (Chennai / Tamil Nadu IST)
+const DEFAULT_PRAYER_SCHEDULE: PrayerTime[] = [
+  { name: 'Fajr', arabicName: 'الفجر', time: '04:55' },
+  { name: 'Sunrise', arabicName: 'الشروق', time: '06:05' },
+  { name: 'Dhuhr', arabicName: 'الظهر', time: '12:05' },
+  { name: 'Asr', arabicName: 'العصر', time: '15:24' },
+  { name: 'Maghrib', arabicName: 'المغرب', time: '17:58' },
+  { name: 'Isha', arabicName: 'العشاء', time: '19:12' },
 ];
 
 export default function App() {
@@ -378,7 +380,7 @@ export default function App() {
   // 9. Travel Buddy Voice State
   const [voiceEnabled, setVoiceEnabled] = useState(true);
 
-  // 10. Live Clock & Prayer Calculation
+  // 10. Live Clock & Dynamic Astronomical Prayer Calculation
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -388,8 +390,38 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  const [activeCoords, setActiveCoords] = useState<[number, number]>(() => {
+    try {
+      const saved = localStorage.getItem('hoopo_last_known_coords');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [12.9249, 80.1000]; // Default: Tambaram / Chennai, Tamil Nadu
+  });
+
+  useEffect(() => {
+    if (realUserLocation) {
+      setActiveCoords(realUserLocation);
+      try {
+        localStorage.setItem('hoopo_last_known_coords', JSON.stringify(realUserLocation));
+      } catch {}
+    }
+  }, [realUserLocation]);
+
+  const computedPrayerSchedule = React.useMemo(() => {
+    return calculateOfflinePrayerSchedule(activeCoords[0], activeCoords[1], currentTime);
+  }, [activeCoords, currentTime.toDateString()]);
+
+  const dynamicPrayerSchedule: PrayerTime[] = React.useMemo(() => [
+    { name: 'Fajr', arabicName: 'الفجر', time: computedPrayerSchedule.fajr },
+    { name: 'Sunrise', arabicName: 'الشروق', time: computedPrayerSchedule.sunrise },
+    { name: 'Dhuhr', arabicName: 'الظهر', time: computedPrayerSchedule.dhuhr },
+    { name: 'Asr', arabicName: 'العصر', time: computedPrayerSchedule.asr },
+    { name: 'Maghrib', arabicName: 'المغرب', time: computedPrayerSchedule.maghrib },
+    { name: 'Isha', arabicName: 'العشاء', time: computedPrayerSchedule.isha },
+  ], [computedPrayerSchedule]);
+
   const prayerCalc = getNextPrayer(
-    PRAYER_SCHEDULE,
+    dynamicPrayerSchedule,
     currentTime.getHours(),
     currentTime.getMinutes()
   );
@@ -989,10 +1021,11 @@ export default function App() {
           {/* Widget 2 (Middle): Upcoming Prayer Time ONLY (Not All) */}
           <div className="shrink-0 min-h-[140px]">
             <PrayerTimesWidget
-              prayers={PRAYER_SCHEDULE}
+              prayers={dynamicPrayerSchedule}
               currentPrayer={prayerCalc.currentPrayer}
               nextPrayer={prayerCalc.nextPrayer}
               minutesRemaining={prayerCalc.minutesRemaining}
+              qiblaBearing={computedPrayerSchedule.qiblaBearingDeg}
               onLocateNearestMosque={() => {
                 setShowFuelModal(true);
                 if (voiceEnabled) {
