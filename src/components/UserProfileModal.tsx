@@ -90,7 +90,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   const handleTestVoice = () => {
     setIsPlayingTestAudio(true);
-    const testText = `Assalamu Alaikum ${nameInput.trim() || 'Friend'}! Redwing tactical avionics are online. Weather is clear and all systems are nominal. Fi Amanillah!`;
+    const testText = `Assalamu Alaikum ${nameInput.trim() || 'Friend'}! Hoopoe AI avionics are online. Weather is clear and all systems are nominal. Fi Amanillah!`;
     speakHoopoMessage(testText, voiceSettings);
     setTimeout(() => setIsPlayingTestAudio(false), 3000);
   };
@@ -166,7 +166,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div className="space-y-4 my-2">
             <div>
               <label htmlFor="driver-name-input" className="block text-xs font-semibold text-slate-300 mb-1.5">
-                What should Redwing &amp; Hoopo call you?
+                What should Hoopoe AI call you?
               </label>
               <div className="relative">
                 <input

@@ -1,7 +1,7 @@
 # 🚗🦅 Hoopoe Car Companion
 
-> **Smart Automotive Cockpit, Navigation HUD & Redwing AI Travel Buddy**  
-> An all-in-one automotive companion featuring real-time map navigation, automated hardware GPS speedometer, Redwing combat drone AI travel buddy, Islamic prayer times, Travel Dua recitation, offline map caching, and EPA standard fuel/CO₂ emission logging.
+> **Smart Automotive Cockpit, Navigation HUD & Hoopoe AI Travel Buddy**  
+> An all-in-one automotive companion featuring real-time map navigation, automated hardware GPS speedometer, Hoopoe AI travel buddy, Islamic prayer times, Travel Dua recitation, offline map caching, and EPA standard fuel/CO₂ emission logging.
 
 ![Hoopoe Logo](public/assets/aistudio/hoopoe_logo_bedb9b31.png)
 
@@ -31,11 +31,11 @@
 - **Offline Storage Manager**: Displays number of cached tiles and storage space used (MB) with 1-click cache updates.
 - **Offline Mode Navigation Switch**: Toggle simulated zero-network navigation with a persistent HUD badge.
 
-### 4. 🦅 Redwing AI Travel Buddy (Right Column)
-- **Avengers Combat Drone Mascot**: Designed after Falcon / Sam Wilson's **EXO-7 Redwing** reconnaissance drone from Marvel Avengers, featuring crimson armor plating, swept variable-geometry delta wings, a glowing HUD cyclopean scanner eye, and animated dual ion micro-thrusters with pulsing plasma exhaust.
-- **Spontaneous Friendly Banter**: Redwing casually and spontaneously drops conversational thoughts every 90–120 seconds while cruising (weather observations, music commentary, road break reminders, and dhikr).
-- **Interactive Touch Feedback**: Tap Redwing’s wings anytime for an instant friendly travel remark.
-- **Driver Name Callouts**: Redwing addresses the driver naturally by their custom name in all emergency alerts and casual remarks.
+### 4. 🦅 Hoopoe AI Travel Buddy (Right Column)
+- **Autonomous Avionic Companion Drone Mascot**: Inspired by the historic Hoopoe bird—symbol of travel guidance and navigation—featuring aerodynamic variable-geometry swept wings, a glowing HUD cyclopean scanner eye, and animated dual ion micro-thrusters with pulsing plasma exhaust.
+- **Spontaneous Friendly Banter**: Hoopoe AI casually and spontaneously drops conversational thoughts every 90–120 seconds while cruising (weather observations, music commentary, road break reminders, and dhikr).
+- **Interactive Touch Feedback**: Tap Hoopoe’s wings anytime for an instant friendly travel remark.
+- **Driver Name Callouts**: Hoopoe addresses the driver naturally by their custom name in all emergency alerts and casual remarks.
 
 ### 5. 🕌 Islamic Travel Features & Authentic Arabic Pronunciation
 - **Opening Travel Dua Modal**: Recitation of the authentic travel prayer (*Dua as-Safar*, Sahih Muslim 2392) in Arabic with complete Tamil phonetic transliteration.
@@ -50,7 +50,7 @@
 ### 7. 🌿 Standard EPA & Argonne National Laboratory (ANL) Emissions
 - **EPA Gasoline Model**: Calculates driving CO₂ based on the standard **2,392 g CO₂ per liter** factor.
 - **Argonne National Lab (ANL-GREET) Idle Model**: Monitored idle fuel loss rate of **0.6977 g CO₂/sec** (1.05 L/hr idle rate).
-- **Automated 40s Idle Alert**: When stopped with ignition running for > 40 seconds, Redwing alerts the driver to turn off the engine and prevent fuel waste.
+- **Automated 40s Idle Alert**: When stopped with ignition running for > 40 seconds, Hoopoe AI alerts the driver to turn off the engine and prevent fuel waste.
 
 ### 8. ⛽ Manual Petrol & Expense Logger
 - Refill logbook tracking volume in liters, total expense ($), service station name, odometer reading, and custom notes with full local persistence.
@@ -60,7 +60,7 @@
 - **Driving Performance Rating Scorecard**: Triggered upon turning off the ignition or finishing a ride; calculates an overall score (0–100), letter grade (A+ to D), safety index, eco-efficiency score, and tailored driving recommendations.
 
 ### 10. ⚙️ Voice Settings & Driver Profile
-- **Customizable Driver Name**: Set what Redwing and the audio system call you.
+- **Customizable Driver Name**: Set what Hoopoe AI and the audio system call you.
 - **System Speech Voice Selector**: Dropdown supporting all installed system speech synthesis voices.
 - **Audio Controls**: Sliders for Pitch (0.8x – 1.4x), Speech Rate (0.8x – 1.3x), and Volume (0% – 100%).
 - **Test Voice Preview**: Plays a live greeting sample calling the user by name.

@@ -28,7 +28,6 @@ import {
   MessageCircle,
   Sliders,
   Settings,
-  Smartphone,
 } from 'lucide-react';
 
 import { SpeedGauge } from './components/SpeedGauge';
@@ -45,7 +44,6 @@ import { PetrolExpenseModal } from './components/PetrolExpenseModal';
 import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
-import { AndroidApkModal } from './components/AndroidApkModal';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 
 import {
@@ -74,146 +72,137 @@ import {
 } from './utils/companionLogic';
 import { soundEngine, speakHoopoMessage } from './utils/audioSynthesizer';
 
-// Realistic sample route coordinates across Tamil Nadu highways
+// Realistic sample route coordinates across Tirunelveli & South Tamil Nadu highways
 const SAMPLE_ROUTES: RouteOption[] = [
   {
     id: 'route-fast',
-    name: 'Chennai to Madurai Express (GST Road / NH 45)',
+    name: 'Madurai - Tirunelveli - Kanyakumari Express (NH 44)',
     tag: 'Fastest',
-    distanceKm: 128,
-    durationMins: 95,
+    distanceKm: 160,
+    durationMins: 125,
     trafficLevel: 'smooth',
     rainRisk: true,
     fuelStopsCount: 4,
     waypoints: [
-      [12.9249, 80.1000], // Chennai Tambaram
-      [12.8250, 80.0450], // Maraimalai Nagar
-      [12.6841, 79.9836], // Chengalpattu Toll
-      [12.4820, 79.8820], // Madurantakam Bypass
-      [12.2334, 79.6508], // Tindivanam Highway Junction
-      [11.9398, 79.4925], // Villupuram Highway Hub
-      [11.6912, 79.2908], // Ulundurpet Swagat Plaza
-      [11.4500, 79.1200], // Veppur
-      [11.2342, 78.8812], // Perambalur
+      [8.7139, 77.7567], // Tirunelveli Junction
+      [8.8550, 77.7820], // Gangaikondan Industrial Hub
+      [8.9500, 77.7700], // Kayathar Toll Plaza
+      [9.1700, 77.8700], // Kovilpatti Bypass
+      [9.3800, 77.9600], // Sattur Bridge
+      [9.5800, 77.9500], // Virudhunagar Expressway Junction
+      [9.9252, 78.1198], // Madurai City Hub
     ],
   },
   {
     id: 'route-coastal',
-    name: 'East Coast Road (ECR Scenic Coastal)',
+    name: 'Tirunelveli - Tenkasi - Courtallam Highway (SH 39)',
     tag: 'Scenic',
-    distanceKm: 135,
-    durationMins: 110,
+    distanceKm: 58,
+    durationMins: 65,
     trafficLevel: 'smooth',
     rainRisk: false,
-    fuelStopsCount: 3,
+    fuelStopsCount: 2,
     waypoints: [
-      [12.9050, 80.2520], // Chennai Akkarai ECR
-      [12.7930, 80.2450], // Kovalam
-      [12.6269, 80.1927], // Mahabalipuram
-      [12.5020, 80.1550], // Kalpakkam
-      [12.1960, 79.9480], // Marakkanam
-      [11.9338, 79.8322], // Pondicherry Promenade
-      [11.7480, 79.7714], // Cuddalore Port
-      [10.8197, 79.8457], // Nagore Dargah & Coast
+      [8.7139, 77.7567], // Tirunelveli Town
+      [8.7900, 77.5800], // Alangulam
+      [8.8600, 77.4400], // Pavoorchatram
+      [8.9594, 77.3150], // Tenkasi / Courtallam Falls
     ],
   },
   {
     id: 'route-eco',
-    name: 'Salem - Coimbatore Expressway (NH 544)',
+    name: 'Tirunelveli - Thoothukudi Port Expressway (NH 138)',
     tag: 'Eco-Friendly',
-    distanceKm: 142,
-    durationMins: 105,
+    distanceKm: 48,
+    durationMins: 45,
     trafficLevel: 'smooth',
     rainRisk: false,
-    fuelStopsCount: 3,
+    fuelStopsCount: 2,
     waypoints: [
-      [11.6643, 78.1460], // Salem Junction
-      [11.4880, 77.8680], // Sankari Toll
-      [11.4420, 77.6820], // Bhavani / Erode
-      [11.3500, 77.4900], // Perundurai
-      [11.1920, 77.2690], // Avinashi Bypass
-      [11.0168, 76.9558], // Coimbatore Gandhipuram
+      [8.7139, 77.7567], // Palayamkottai
+      [8.7200, 77.9200], // Vagaikulam
+      [8.7642, 78.1348], // Thoothukudi (Tuticorin) Sea Port
     ],
   },
 ];
 
-// Sample Highway Fuel Plazas along Tamil Nadu Highways
+// Sample Highway Fuel Plazas around Tirunelveli & South Tamil Nadu
 const SAMPLE_FUEL_STATIONS: FuelStation[] = [
   {
     id: 'st-1',
-    name: 'Indian Oil Swagat COCO Plaza',
-    brand: 'Indian Oil',
-    distanceKm: 14.5,
+    name: 'BPCL Highway Lounge - Tirunelveli Bypass (NH 44)',
+    brand: 'BPCL',
+    distanceKm: 4.5,
     fuelPrice: 101.4,
-    amenities: ['Highway Musalla', 'A2B Restaurant', 'EV Fast Charge 60kW', 'Clean Restrooms'],
-    lat: 12.6841,
-    lng: 79.9836,
+    amenities: ['Highway Musalla', 'Nellai Cafe & Snacks', '24/7 Air & Water', 'Clean Restrooms'],
+    lat: 8.7320,
+    lng: 77.7250,
   },
   {
     id: 'st-2',
-    name: 'BPCL Ghar Highway Outpost',
-    brand: 'BPCL',
-    distanceKm: 42.0,
+    name: 'Indian Oil Swagat COCO Plaza (Gangaikondan NH 44)',
+    brand: 'Indian Oil',
+    distanceKm: 18.0,
     fuelPrice: 101.2,
-    amenities: ['Prayer Hall', 'McDonalds & Cafe', '24/7 Air & Water', 'Dormitory'],
-    lat: 12.2334,
-    lng: 79.6508,
+    amenities: ['Air-Conditioned Musalla', 'A2B Restaurant', 'EV Fast Charge 60kW', 'Dormitory'],
+    lat: 8.8550,
+    lng: 77.7820,
   },
   {
     id: 'st-3',
-    name: 'HPCL Samayapuram Highway Oasis',
+    name: 'HPCL Fuel Oasis & Musalla - Palayamkottai South',
     brand: 'HPCL',
-    distanceKm: 78.5,
+    distanceKm: 6.2,
     fuelPrice: 101.5,
-    amenities: ['Air-Conditioned Musalla', 'EV Fast Charge 120kW', 'South Indian Food Court'],
-    lat: 11.6912,
-    lng: 79.2908,
+    amenities: ['Prayer Hall', '24/7 Car Care', 'EV Fast Charge 120kW', 'South Indian Cafe'],
+    lat: 8.7050,
+    lng: 77.7420,
   },
   {
     id: 'st-4',
-    name: 'Shell Select Express Tambaram',
+    name: 'Shell Service Station - Tirunelveli New Bus Stand',
     brand: 'Shell',
-    distanceKm: 95.0,
+    distanceKm: 2.8,
     fuelPrice: 107.8,
-    amenities: ['Prayer Area', 'Shell Deli2go Fresh Market', '24/7 Car Care', 'EV Charger'],
-    lat: 12.9249,
-    lng: 80.1000,
+    amenities: ['Prayer Area', 'Shell Deli2go Fresh Market', '24/7 Car Wash', 'EV Charger'],
+    lat: 8.7190,
+    lng: 77.7320,
   },
 ];
 
-// Weather forecasts along Tamil Nadu highway routes
+// Weather forecasts along Tirunelveli & South Tamil Nadu highway corridors
 const SAMPLE_WEATHER: WeatherCondition[] = [
   {
-    location: 'Km 18 - Tambaram / Chengalpattu GST',
-    kmMark: 18,
+    location: 'Km 12 - Tirunelveli Bypass / Gangaikondan NH 44',
+    kmMark: 12,
     condition: 'Clear',
     riskLevel: 'low',
-    advisory: 'Clear visibility and dry road surface along GST Road expressway.',
+    advisory: 'Clear visibility and dry road surface along Tirunelveli NH 44 corridor.',
   },
   {
-    location: 'Km 65 - Tindivanam Coastal Sector',
-    kmMark: 65,
+    location: 'Km 45 - Tenkasi Western Ghats Sector',
+    kmMark: 45,
     condition: 'Rain',
     riskLevel: 'moderate',
-    advisory: 'Moderate coastal monsoon showers expected. Maintain safe following distance and activate wipers.',
+    advisory: 'Western Ghats hill mist & light monsoon showers near Courtallam. Maintain safe following distance.',
   },
   {
-    location: 'Km 110 - Ulundurpet Toll Corridor',
-    kmMark: 110,
+    location: 'Km 35 - Thoothukudi Port Coastal Expressway',
+    kmMark: 35,
     condition: 'Cloudy',
     riskLevel: 'low',
-    advisory: 'Pleasant overcast skies with smooth highway cruising conditions.',
+    advisory: 'Moderate coastal sea breeze with smooth highway cruising conditions.',
   },
 ];
 
-// Default Islamic prayer times baseline (Chennai / Tamil Nadu IST)
+// Default Islamic prayer times baseline (Tirunelveli / Tamil Nadu IST)
 const DEFAULT_PRAYER_SCHEDULE: PrayerTime[] = [
-  { name: 'Fajr', arabicName: 'الفجر', time: '04:55' },
-  { name: 'Sunrise', arabicName: 'الشروق', time: '06:05' },
-  { name: 'Dhuhr', arabicName: 'الظهر', time: '12:05' },
-  { name: 'Asr', arabicName: 'العصر', time: '15:24' },
-  { name: 'Maghrib', arabicName: 'المغرب', time: '17:58' },
-  { name: 'Isha', arabicName: 'العشاء', time: '19:12' },
+  { name: 'Fajr', arabicName: 'الفجر', time: '05:02' },
+  { name: 'Sunrise', arabicName: 'الشروق', time: '06:12' },
+  { name: 'Dhuhr', arabicName: 'الظهر', time: '12:12' },
+  { name: 'Asr', arabicName: 'العصر', time: '15:32' },
+  { name: 'Maghrib', arabicName: 'المغرب', time: '18:04' },
+  { name: 'Isha', arabicName: 'العشاء', time: '19:18' },
 ];
 
 export default function App() {
@@ -251,7 +240,6 @@ export default function App() {
   const [showTripModal, setShowTripModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showApkModal, setShowApkModal] = useState(false);
 
   // 3. Navigation & Map State
   const [activeRoute, setActiveRoute] = useState<RouteOption>(SAMPLE_ROUTES[0]);
@@ -395,7 +383,7 @@ export default function App() {
       const saved = localStorage.getItem('hoopo_last_known_coords');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return [12.9249, 80.1000]; // Default: Tambaram / Chennai, Tamil Nadu
+    return [8.7139, 77.7567]; // Default: Tirunelveli, Tamil Nadu
   });
 
   useEffect(() => {
@@ -821,18 +809,6 @@ export default function App() {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Android APK Compilation & Install Button */}
-          <button
-            type="button"
-            onClick={() => setShowApkModal(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/60 text-xs font-bold text-emerald-300 transition-all shadow-sm"
-            aria-label="Install or compile Android APK"
-            title="Install or compile Hoopoe as an Android APK"
-          >
-            <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Install APK</span>
-          </button>
-
           {/* Finish Ride / Driving Rating Button */}
           <button
             type="button"
@@ -891,11 +867,11 @@ export default function App() {
       </header>
 
       {/* Main Automotive Cockpit: Landscape Three-Column Setup */}
-      <main className="flex-1 min-h-0 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-y-auto lg:overflow-hidden">
+      <main className="flex-1 min-h-0 p-2 sm:p-3 grid grid-cols-1 md:grid-cols-12 landscape:grid-cols-12 gap-2.5 sm:gap-3 overflow-y-auto md:overflow-hidden landscape:overflow-hidden">
         {/* COLUMN 1 (LEFT, ~25-28%): Speed Gauge Cluster + Telematics */}
         <section
           aria-label="Vehicle Instrument Cluster"
-          className="lg:col-span-3 xl:col-span-3 flex flex-col gap-3 h-full min-h-[460px] lg:min-h-0 overflow-y-auto"
+          className="md:col-span-3 landscape:col-span-3 flex flex-col gap-2.5 sm:gap-3 h-full min-h-[420px] md:min-h-0 landscape:min-h-0 overflow-y-auto"
         >
           {/* Speed Gauge (At Left Corner) with Real GPS / Simulator modes */}
           <div className="flex-1 min-h-[360px]">
@@ -952,7 +928,7 @@ export default function App() {
         {/* COLUMN 2 (CENTRE, ~45-50%): Centre Map with Embedded Search & Direction */}
         <section
           aria-label="Centre Navigation Map"
-          className="lg:col-span-6 xl:col-span-6 flex flex-col h-[500px] lg:h-full min-h-0"
+          className="md:col-span-6 landscape:col-span-6 flex flex-col h-[460px] md:h-full landscape:h-full min-h-0"
         >
           <MapCenter
             currentSpeed={currentSpeed}
@@ -992,7 +968,7 @@ export default function App() {
         {/* COLUMN 3 (RIGHT, ~25-28%): Other Widgets (Bird Drone Mascot + Upcoming Prayer + Radio & Music Player) */}
         <section
           aria-label="Right Cockpit Widgets"
-          className="lg:col-span-3 xl:col-span-3 flex flex-col gap-2.5 h-full min-h-[500px] lg:min-h-0 overflow-y-auto"
+          className="md:col-span-3 landscape:col-span-3 flex flex-col gap-2 sm:gap-2.5 h-full min-h-[460px] md:min-h-0 landscape:min-h-0 overflow-y-auto"
         >
           {/* Widget 1 (Top): Tiny Animated Hoopo Bird Drone with AI Companion Talk */}
           <div className="shrink-0 min-h-[170px]">
@@ -1141,12 +1117,6 @@ export default function App() {
         isOpen={showVoiceModal}
         onClose={() => setShowVoiceModal(false)}
         onExecuteCommand={handleExecuteVoiceCommand}
-      />
-
-      {/* Android APK Compilation & Install Modal */}
-      <AndroidApkModal
-        isOpen={showApkModal}
-        onClose={() => setShowApkModal(false)}
       />
     </div>
   );

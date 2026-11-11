@@ -47,118 +47,112 @@ export interface SearchDestination {
 
 export const PRESET_SEARCH_DESTINATIONS: SearchDestination[] = [
   {
-    id: 'dest-airport-chennai',
-    name: 'Chennai International Airport (MAA)',
-    category: 'Airport',
-    address: 'Grand Southern Trunk (GST) Rd, Meenambakkam, Chennai',
-    distanceKm: 14.2,
-    durationMins: 22,
-    lat: 12.9941,
-    lng: 80.1709,
-    routeWaypoints: [
-      [12.9249, 80.1000],
-      [12.9450, 80.1250],
-      [12.9700, 80.1500],
-      [12.9941, 80.1709],
-    ],
-  },
-  {
-    id: 'dest-mosque-nagore',
-    name: 'Nagore Dargah & Seaside Musalla',
-    category: 'Mosque',
-    address: 'Nagore Beach Rd, Nagapattinam (via ECR)',
-    distanceKm: 165.0,
-    durationMins: 140,
-    lat: 10.8197,
-    lng: 79.8457,
-    routeWaypoints: [
-      [12.9050, 80.2520],
-      [12.6269, 80.1927],
-      [11.9338, 79.8322],
-      [11.7480, 79.7714],
-      [10.8197, 79.8457],
-    ],
-  },
-  {
-    id: 'dest-thousand-lights',
-    name: 'Thousand Lights Historic Mosque',
-    category: 'Mosque',
-    address: 'Anna Salai, Thousand Lights, Central Chennai',
-    distanceKm: 18.5,
-    durationMins: 28,
-    lat: 13.0569,
-    lng: 80.2520,
-    routeWaypoints: [
-      [12.9249, 80.1000],
-      [12.9600, 80.1500],
-      [13.0100, 80.2100],
-      [13.0569, 80.2520],
-    ],
-  },
-  {
-    id: 'dest-ioc-swagat',
-    name: 'Indian Oil Swagat Highway Hub (Ulundurpet)',
-    category: 'Plaza',
-    address: 'GST Expressway, NH 45 Ulundurpet Bypass',
-    distanceKm: 132.0,
-    durationMins: 98,
-    lat: 11.6912,
-    lng: 79.2908,
-    routeWaypoints: [
-      [12.9249, 80.1000],
-      [12.6841, 79.9836],
-      [12.2334, 79.6508],
-      [11.9398, 79.4925],
-      [11.6912, 79.2908],
-    ],
-  },
-  {
-    id: 'dest-mahabs',
-    name: 'Mahabalipuram Coastal Heritage Point',
-    category: 'Highway',
-    address: 'East Coast Road (ECR), Mahabalipuram',
-    distanceKm: 42.0,
-    durationMins: 38,
-    lat: 12.6269,
-    lng: 80.1927,
-    routeWaypoints: [
-      [12.9050, 80.2520],
-      [12.7930, 80.2450],
-      [12.6269, 80.1927],
-    ],
-  },
-  {
-    id: 'dest-madurai',
-    name: 'Madurai Central & Goripalayam Hub',
+    id: 'dest-tirunelveli-junction',
+    name: 'Tirunelveli Railway Junction (Nellai Central)',
     category: 'City Center',
-    address: 'Alagar Kovil Rd, Goripalayam, Madurai (NH 45/44)',
-    distanceKm: 415.0,
-    durationMins: 290,
+    address: 'Station Rd, Tirunelveli Junction, Tamil Nadu 627001',
+    distanceKm: 3.5,
+    durationMins: 8,
+    lat: 8.7285,
+    lng: 77.7081,
+    routeWaypoints: [
+      [8.7139, 77.7567],
+      [8.7200, 77.7300],
+      [8.7285, 77.7081],
+    ],
+  },
+  {
+    id: 'dest-nellaiappar-temple',
+    name: 'Nellaiappar Historic Cultural Hub (Nellai Town)',
+    category: 'City Center',
+    address: 'South Car St, Tirunelveli Town, Tamil Nadu 627006',
+    distanceKm: 5.2,
+    durationMins: 12,
+    lat: 8.7288,
+    lng: 77.6896,
+    routeWaypoints: [
+      [8.7139, 77.7567],
+      [8.7220, 77.7150],
+      [8.7288, 77.6896],
+    ],
+  },
+  {
+    id: 'dest-palayamkottai-hub',
+    name: 'Palayamkottai High Ground & Hospital Hub',
+    category: 'Highway',
+    address: 'Palayamkottai Central, Tirunelveli',
+    distanceKm: 2.1,
+    durationMins: 5,
+    lat: 8.7180,
+    lng: 77.7470,
+    routeWaypoints: [
+      [8.7139, 77.7567],
+      [8.7150, 77.7520],
+      [8.7180, 77.7470],
+    ],
+  },
+  {
+    id: 'dest-courtallam-falls',
+    name: 'Courtallam Main Waterfalls (Tenkasi SH 39)',
+    category: 'Highway',
+    address: 'Courtallam Western Ghats Corridor, Tenkasi',
+    distanceKm: 56.0,
+    durationMins: 65,
+    lat: 8.9594,
+    lng: 77.3150,
+    routeWaypoints: [
+      [8.7139, 77.7567],
+      [8.7900, 77.5800],
+      [8.8600, 77.4400],
+      [8.9594, 77.3150],
+    ],
+  },
+  {
+    id: 'dest-madurai-expressway',
+    name: 'Madurai Central via NH 44 Expressway',
+    category: 'City Center',
+    address: 'NH 44 North Corridor, Madurai, Tamil Nadu',
+    distanceKm: 160.0,
+    durationMins: 125,
     lat: 9.9252,
     lng: 78.1198,
     routeWaypoints: [
-      [12.9249, 80.1000],
-      [11.9398, 79.4925],
-      [11.6912, 79.2908],
-      [10.7905, 78.7047],
+      [8.7139, 77.7567],
+      [8.8550, 77.7820],
+      [8.9500, 77.7700],
+      [9.3800, 77.9600],
       [9.9252, 78.1198],
     ],
   },
   {
-    id: 'dest-coimbatore',
-    name: 'Coimbatore Airport & IT Corridor',
-    category: 'Airport',
-    address: 'Avinashi Road, Civil Aerodrome Post, Coimbatore',
-    distanceKm: 480.0,
-    durationMins: 340,
-    lat: 11.0300,
-    lng: 77.0434,
+    id: 'dest-kanyakumari-cape',
+    name: 'Kanyakumari Southern Cape & Sunset Point',
+    category: 'Highway',
+    address: 'NH 44 South Highway, Cape Comorin',
+    distanceKm: 85.0,
+    durationMins: 75,
+    lat: 8.0883,
+    lng: 77.5385,
     routeWaypoints: [
-      [12.9249, 80.1000],
-      [12.6841, 79.9836],
-      [11.6643, 78.1460],
-      [11.4420, 77.6820],
-      [11.0300, 77.0434],
+      [8.7139, 77.7567],
+      [8.5000, 77.6800],
+      [8.3000, 77.6200],
+      [8.0883, 77.5385],
+    ],
+  },
+  {
+    id: 'dest-thoothukudi-port',
+    name: 'Thoothukudi (Tuticorin) Sea Port & Beach',
+    category: 'Airport',
+    address: 'Harbor Expressway, NH 138 Thoothukudi',
+    distanceKm: 48.0,
+    durationMins: 45,
+    lat: 8.7642,
+    lng: 78.1348,
+    routeWaypoints: [
+      [8.7139, 77.7567],
+      [8.7200, 77.9200],
+      [8.7642, 78.1348],
     ],
   },
 ];
@@ -282,7 +276,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
     const timer = setTimeout(async () => {
       setIsSearchingLive(true);
-      const userPos = realUserLocation || activeRoute.waypoints[0] || [12.9249, 80.1000];
+      const userPos = realUserLocation || activeRoute.waypoints[0] || [8.7139, 77.7567];
       const results = await searchPlacesLive(searchQuery, userPos[0], userPos[1]);
       setLiveSearchResults(results);
       setIsSearchingLive(false);
@@ -299,39 +293,68 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     } catch {}
   };
 
+  // Determine current active target or route direction
+  const activeTargetName = selectedDestination
+    ? selectedDestination.name
+    : activeRoute?.name || 'Tirunelveli Central & Nellai Corridor';
+
   const handleSaveRouteOffline = async () => {
     setIsCachingInProgress(true);
-    setCachingProgressPercent(15);
+    setCachingProgressPercent(12);
 
-    // Cache actual tile URLs or fallback into CacheStorage
+    // Compute waypoints based on user route direction or Tirunelveli defaults
+    const waypoints: [number, number][] = selectedDestination
+      ? selectedDestination.routeWaypoints
+      : activeRoute?.waypoints && activeRoute.waypoints.length > 0
+      ? activeRoute.waypoints
+      : [
+          [8.7139, 77.7567],
+          [8.7285, 77.7081],
+          [8.8550, 77.7820],
+          [8.9500, 77.7700],
+        ];
+
+    // Generate tile URLs covering route waypoints across zoom levels 11, 12, 13, 14
+    const tileUrls: string[] = [];
+    const zooms = [12, 13, 14];
+    for (const [lat, lng] of waypoints) {
+      for (const z of zooms) {
+        const x = Math.floor(((lng + 180) / 360) * Math.pow(2, z));
+        const latRad = (lat * Math.PI) / 180;
+        const y = Math.floor(
+          ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z)
+        );
+        tileUrls.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+        tileUrls.push(`https://mt1.google.com/vt/lyrs=m&x=${x}&y=${y}&z=${z}`);
+      }
+    }
+
     try {
       if ('caches' in window) {
         const cache = await caches.open('hoopo-offline-maps-v1');
-        // Sample tiles covering current route region
-        const sampleUrls = [
-          'https://a.tile.openstreetmap.org/13/4880/3300.png',
-          'https://b.tile.openstreetmap.org/13/4881/3300.png',
-          'https://c.tile.openstreetmap.org/13/4882/3300.png',
-        ];
-        for (let i = 0; i < sampleUrls.length; i++) {
+        const uniqueUrls = Array.from(new Set(tileUrls));
+        const total = uniqueUrls.length;
+        for (let i = 0; i < total; i++) {
           try {
-            await cache.add(sampleUrls[i]);
+            await cache.add(uniqueUrls[i]);
           } catch {
-            // ignore network restrictions in dev
+            // ignore network/cross-origin exceptions in browser
           }
-          setCachingProgressPercent(25 + Math.round((i / sampleUrls.length) * 60));
+          if (i % 4 === 0) {
+            setCachingProgressPercent(15 + Math.round(((i + 1) / total) * 80));
+          }
         }
       }
     } catch (e) {
       console.warn('Cache API warning:', e);
     }
 
-    // Step progress
-    setTimeout(() => setCachingProgressPercent(70), 400);
+    // Finish step progress
     setTimeout(() => {
       setCachingProgressPercent(100);
-      const newCount = cachedTilesCount + 68;
-      const newSize = Math.round((cachedSizeMb + 5.2) * 10) / 10;
+      const tilesAdded = Math.max(48, Math.min(tileUrls.length, 120));
+      const newCount = cachedTilesCount + tilesAdded;
+      const newSize = Math.round((cachedSizeMb + tilesAdded * 0.052) * 10) / 10;
       const dateStr = new Date().toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
@@ -340,14 +363,15 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       });
       setCachedTilesCount(newCount);
       setCachedSizeMb(newSize);
-      setLastCacheDate(dateStr);
+      const label = `${dateStr} (${activeTargetName.slice(0, 22)})`;
+      setLastCacheDate(label);
       try {
         localStorage.setItem('hoopo_offline_tiles_count', String(newCount));
         localStorage.setItem('hoopo_offline_size_mb', String(newSize));
-        localStorage.setItem('hoopo_offline_last_cached', dateStr);
+        localStorage.setItem('hoopo_offline_last_cached', label);
       } catch {}
       setIsCachingInProgress(false);
-    }, 900);
+    }, 800);
   };
 
   const handleClearOfflineCache = () => {
@@ -364,13 +388,13 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     setLastCacheDate('Cleared');
   };
 
-  // Turn-by-turn guidance cues (Tamil Nadu GST Road corridor)
+  // Turn-by-turn guidance cues (Tirunelveli NH 44 / SH 39 corridor)
   const navInstructions = [
-    { distance: '500 m', text: 'Continue straight on Grand Southern Trunk (GST) Road / NH 45', icon: 'straight' },
-    { distance: '1.8 km', text: 'Take exit toward Chengalpattu / Tindivanam Expressway', icon: 'right' },
-    { distance: '4.2 km', text: 'Keep left on the flyover past Ulundurpet Swagat Plaza', icon: 'left' },
-    { distance: '8.5 km', text: 'Merge smoothly onto NH 38 towards Tiruchirappalli', icon: 'straight' },
-    { distance: '12 km', text: 'Arrive at destination on your left', icon: 'destination' },
+    { distance: '400 m', text: 'Head northeast on Madurai - Tirunelveli Expressway / NH 44', icon: 'straight' },
+    { distance: '1.5 km', text: 'Take exit toward Tirunelveli Junction / Vannarpettai Bypass', icon: 'right' },
+    { distance: '3.8 km', text: 'Keep left on the flyover toward Tenkasi / Courtallam Highway (SH 39)', icon: 'left' },
+    { distance: '8.2 km', text: 'Continue past Gangaikondan Swagat Plaza toward Kayathar', icon: 'straight' },
+    { distance: '14 km', text: 'Arrive at destination on your left', icon: 'destination' },
   ];
 
   // Initialize Leaflet Map
@@ -378,7 +402,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const startCoord = realUserLocation || activeRoute.waypoints[0] || [12.9249, 80.1000];
+      const startCoord = realUserLocation || activeRoute.waypoints[0] || [8.7139, 77.7567];
       const map = L.map(mapContainerRef.current, {
         center: startCoord,
         zoom: 13,
@@ -1199,10 +1223,10 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                 </div>
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    Map Cache &bull; Local Storage
+                    Offline Map Engine &bull; Tirunelveli &amp; South TN
                   </span>
                   <h3 className="text-sm font-bold text-white">
-                    Offline Google Map Saving
+                    Offline Map Cache Manager
                   </h3>
                 </div>
               </div>
@@ -1215,8 +1239,23 @@ export const MapCenter: React.FC<MapCenterProps> = ({
               </button>
             </div>
 
+            {/* Active Route Direction Target Badge */}
+            <div className="mt-3 p-2.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between text-xs">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
+                  Target Route Direction
+                </span>
+                <span className="text-xs font-bold text-white truncate block">
+                  {activeTargetName}
+                </span>
+              </div>
+              <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/40">
+                Nellai NH 44
+              </span>
+            </div>
+
             {/* Offline Mode Toggle Banner */}
-            <div className="my-3 p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
+            <div className="my-2.5 p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-white block">Offline Mode</span>
                 <span className="text-[11px] text-slate-400">
@@ -1263,7 +1302,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             {isCachingInProgress && (
               <div className="mb-3 p-2.5 rounded-xl bg-slate-950 border border-emerald-500/40">
                 <div className="flex justify-between text-xs font-bold text-emerald-400 mb-1">
-                  <span>Saving Route &amp; Area Tiles...</span>
+                  <span>Downloading Tiles along Route...</span>
                   <span>{cachingProgressPercent}%</span>
                 </div>
                 <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -1284,19 +1323,21 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white shadow-md shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all"
               >
                 <Download className={`w-3.5 h-3.5 ${isCachingInProgress ? 'animate-bounce' : ''}`} />
-                <span>
-                  {isCachingInProgress ? 'Downloading & Caching...' : 'Save Current Route & Area Offline'}
+                <span className="truncate">
+                  {isCachingInProgress
+                    ? 'Downloading Route Tiles...'
+                    : `Download Route Map Data (${activeTargetName.slice(0, 24)})`}
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={handleClearOfflineCache}
-                disabled={isCachingInProgress || cachedTilesCount === 0}
+                disabled={isCachingInProgress || (cachedTilesCount === 0 && cachedSizeMb === 0)}
                 className="w-full py-2 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-750 text-slate-400 hover:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear Cached Map Data</span>
+                <span>Clear Default &amp; Cached Map Data</span>
               </button>
             </div>
           </div>

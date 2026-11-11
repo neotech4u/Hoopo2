@@ -211,7 +211,7 @@ class SoundEngine {
     }
   }
 
-  // Tactical Redwing speed warning alert
+  // Tactical Hoopoe AI speed warning alert
   playSpeedWarning() {
     try {
       this.initCtx();

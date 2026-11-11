@@ -10,10 +10,10 @@ interface HoopoMascotProps {
 }
 
 /**
- * Hoopo Autonomous Drone Mascot - Redesigned as Redwing from Marvel Avengers
- * (Falcon/Sam Wilson's sleek crimson & titanium combat reconnaissance drone).
- * Features variable-geometry swept delta wings, glowing tactical HUD scanner eye,
- * dual underslung ion thrusters, and responsive state-based combat telemetry.
+ * Hoopo Autonomous Drone Mascot - Hoopoe AI Companion Drone
+ * Inspired by the historic Hoopoe bird—symbol of travel guidance and navigation.
+ * Features aerodynamic variable-geometry swept wings, glowing tactical HUD scanner eye,
+ * dual underslung ion thrusters, and responsive state-based driving telemetry.
  */
 export const HoopoMascot: React.FC<HoopoMascotProps> = ({
   mood = 'normal',
@@ -55,10 +55,10 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
     <div
       className={`relative inline-flex items-center justify-center select-none transition-all duration-300 ${sizeClasses} ${className}`}
       style={{ filter: auraGlow }}
-      aria-label="Redwing Autonomous Avionics Drone Mascot"
+      aria-label="Hoopoe AI Autonomous Avionics Drone Mascot"
       role="img"
     >
-      {/* Redwing Drone SVG */}
+      {/* Hoopoe Avionic Drone SVG */}
       <svg
         viewBox="0 0 180 180"
         fill="none"
@@ -70,8 +70,8 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
         }`}
       >
         <defs>
-          {/* Avengers Redwing Crimson Red Plating Gradient */}
-          <linearGradient id="redwingCrimson" x1="0%" y1="0%" x2="100%" y2="100%">
+          {/* Hoopoe Avionic Crimson Red Plating Gradient */}
+          <linearGradient id="hoopoeCrimson" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#f87171" />
             <stop offset="25%" stopColor="#ef4444" />
             <stop offset="60%" stopColor="#dc2626" />
@@ -80,14 +80,14 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           </linearGradient>
 
           {/* Secondary Crimson Shadow Gradient */}
-          <linearGradient id="redwingCrimsonDark" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="hoopoeCrimsonDark" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#dc2626" />
             <stop offset="70%" stopColor="#991b1b" />
             <stop offset="100%" stopColor="#450a0a" />
           </linearGradient>
 
           {/* Titanium Silver Wing Blade Edge Gradient */}
-          <linearGradient id="redwingTitaniumBlade" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="hoopoeTitaniumBlade" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
             <stop offset="30%" stopColor="#e2e8f0" />
             <stop offset="70%" stopColor="#94a3b8" />
@@ -95,7 +95,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           </linearGradient>
 
           {/* Stealth Carbon Gunmetal Chassis Gradient */}
-          <linearGradient id="redwingCarbon" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="hoopoeCarbon" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#334155" />
             <stop offset="50%" stopColor="#1e293b" />
             <stop offset="85%" stopColor="#0f172a" />
@@ -130,7 +130,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           <line x1="112" y1="138" x2="112" y2="156" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
         </g>
 
-        {/* 2. Redwing Variable-Geometry Swept Delta Wings (Left Wing) */}
+        {/* 2. Hoopoe Variable-Geometry Swept Delta Wings (Left Wing) */}
         <g
           className="origin-[75px_85px] transition-transform duration-300"
           transform={isFlapping ? 'rotate(-9 75 85)' : 'rotate(0)'}
@@ -138,7 +138,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Primary Swept Titanium Blade Feather */}
           <path
             d="M 75 75 L 22 28 C 16 38 28 64 48 86 L 68 95 Z"
-            fill="url(#redwingTitaniumBlade)"
+            fill="url(#hoopoeTitaniumBlade)"
             stroke="#64748b"
             strokeWidth="1.2"
           />
@@ -146,7 +146,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Secondary Forward Crimson Armor Cowling */}
           <path
             d="M 72 70 L 16 32 C 14 36 18 48 28 58 L 74 88 Z"
-            fill="url(#redwingCrimson)"
+            fill="url(#hoopoeCrimson)"
             stroke="#991b1b"
             strokeWidth="1.2"
           />
@@ -154,7 +154,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Tertiary Lower Kinetic Flap */}
           <path
             d="M 72 92 L 40 84 C 36 94 48 106 60 110 L 74 98 Z"
-            fill="url(#redwingCrimsonDark)"
+            fill="url(#hoopoeCrimsonDark)"
             stroke="#475569"
             strokeWidth="1"
           />
@@ -165,7 +165,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           <circle cx="17" cy="34" r="1.8" fill="#ffffff" />
         </g>
 
-        {/* 3. Redwing Variable-Geometry Swept Delta Wings (Right Wing) */}
+        {/* 3. Hoopoe Variable-Geometry Swept Delta Wings (Right Wing) */}
         <g
           className="origin-[105px_85px] transition-transform duration-300"
           transform={isFlapping ? 'rotate(9 105 85)' : 'rotate(0)'}
@@ -173,7 +173,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Primary Swept Titanium Blade Feather */}
           <path
             d="M 105 75 L 158 28 C 164 38 152 64 132 86 L 112 95 Z"
-            fill="url(#redwingTitaniumBlade)"
+            fill="url(#hoopoeTitaniumBlade)"
             stroke="#64748b"
             strokeWidth="1.2"
           />
@@ -181,7 +181,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Secondary Forward Crimson Armor Cowling */}
           <path
             d="M 108 70 L 164 32 C 166 36 162 48 152 58 L 106 88 Z"
-            fill="url(#redwingCrimson)"
+            fill="url(#hoopoeCrimson)"
             stroke="#991b1b"
             strokeWidth="1.2"
           />
@@ -189,7 +189,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Tertiary Lower Kinetic Flap */}
           <path
             d="M 108 92 L 140 84 C 144 94 132 106 120 110 L 106 98 Z"
-            fill="url(#redwingCrimsonDark)"
+            fill="url(#hoopoeCrimsonDark)"
             stroke="#475569"
             strokeWidth="1"
           />
@@ -205,21 +205,21 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Central Stealth Fin */}
           <polygon
             points="90,105 82,142 90,150 98,142"
-            fill="url(#redwingCarbon)"
+            fill="url(#hoopoeCarbon)"
             stroke="#475569"
             strokeWidth="1.5"
           />
           {/* Left Carbon Stabilizer */}
           <polygon
             points="82,118 64,136 78,136"
-            fill="url(#redwingCrimsonDark)"
+            fill="url(#hoopoeCrimsonDark)"
             stroke="#334155"
             strokeWidth="1"
           />
           {/* Right Carbon Stabilizer */}
           <polygon
             points="98,118 116,136 102,136"
-            fill="url(#redwingCrimsonDark)"
+            fill="url(#hoopoeCrimsonDark)"
             stroke="#334155"
             strokeWidth="1"
           />
@@ -238,12 +238,12 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           <line x1="108" y1="135" x2="116" y2="135" stroke={scannerColor} strokeWidth="1" />
         </g>
 
-        {/* 6. Redwing Central Combat Fuselage & Stealth Cockpit */}
+        {/* 6. Hoopoe Central Avionic Fuselage & Stealth Cockpit */}
         <g>
           {/* Main Diamond Armor Shell */}
           <path
             d="M 90 44 L 112 68 L 108 106 L 90 122 L 72 106 L 68 68 Z"
-            fill="url(#redwingCrimson)"
+            fill="url(#hoopoeCrimson)"
             stroke="#7f1d1d"
             strokeWidth="1.5"
           />
@@ -251,7 +251,7 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Carbon Fiber Inlay Spine */}
           <path
             d="M 90 48 L 102 68 L 98 100 L 90 110 L 82 100 L 78 68 Z"
-            fill="url(#redwingCarbon)"
+            fill="url(#hoopoeCarbon)"
             stroke="#334155"
             strokeWidth="1"
           />
@@ -259,13 +259,13 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
           {/* Forward Recon Probe / Titanium Stinger Beak */}
           <polygon
             points="90,32 94,48 86,48"
-            fill="url(#redwingTitaniumBlade)"
+            fill="url(#hoopoeTitaniumBlade)"
             stroke="#475569"
             strokeWidth="1"
           />
           <line x1="90" y1="33" x2="90" y2="46" stroke="#ffffff" strokeWidth="1" />
 
-          {/* EXO-7 Military Technical Marking */}
+          {/* Technical Marking */}
           <text
             x="90"
             y="96"
@@ -277,11 +277,11 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
             fontFamily="monospace"
             opacity="0.8"
           >
-            EXO-7
+            AI-HUD
           </text>
         </g>
 
-        {/* 7. Redwing Cyclopean Optical HUD Scanner Pod (Eye) */}
+        {/* 7. Hoopoe Cyclopean Optical HUD Scanner Pod (Eye) */}
         <g>
           {/* Optical Pod Housing */}
           <rect

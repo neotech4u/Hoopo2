@@ -89,7 +89,7 @@ export const TravelDuaModal: React.FC<TravelDuaModalProps> = ({ isOpen, onClose 
           <div className="flex items-center gap-3 bg-emerald-950/30 border border-emerald-500/20 rounded-xl p-3 text-xs sm:text-sm text-emerald-300">
             <span className="text-lg">✨</span>
             <p>
-              <strong className="text-emerald-200">Hoopo says:</strong> &ldquo;இப்பயண துஆவை ஓதி பாதுகாப்பை நாடி பயணம் செய்யுங்கள். பிஸ்மில்லாஹ் கூறி இன்ஜினை தொடங்குங்கள்!&rdquo;
+              <strong className="text-emerald-200">Hoopoe says:</strong> &ldquo;இப்பயண துஆவை ஓதி பாதுகாப்பை நாடி பயணம் செய்யுங்கள். பிஸ்மில்லாஹ் கூறி இன்ஜினை தொடங்குங்கள்!&rdquo;
             </p>
           </div>
         </div>

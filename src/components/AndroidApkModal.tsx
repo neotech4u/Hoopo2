@@ -68,7 +68,7 @@ git push -u origin main`;
       id: '/',
       name: 'Hoopoe Car Companion',
       short_name: 'Hoopoe',
-      description: 'Automotive car companion, navigation HUD, and Redwing AI travel buddy.',
+      description: 'Automotive car companion, navigation HUD, and Hoopoe AI travel buddy.',
       theme_color: '#090d16',
       background_color: '#090d16',
       display: 'standalone',

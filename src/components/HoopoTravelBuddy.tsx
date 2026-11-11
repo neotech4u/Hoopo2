@@ -110,7 +110,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
       setActiveAlert({
         id: `speed-${now}`,
         type: 'speed',
-        title: `Redwing Alert for ${userName}`,
+        title: `Hoopoe AI Alert for ${userName}`,
         message: speedAlertMsg,
         actionText: 'Slow Down to Limit',
         onAction: onSlowDown,
@@ -289,7 +289,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     setActiveAlert({
       id: `chat-${Date.now()}`,
       type: 'companion',
-      title: `Redwing &bull; ${userName}`,
+      title: `Hoopoe AI &bull; ${userName}`,
       message: companionText,
       actionText: 'Got It!',
       onAction: () => setActiveAlert(null),
@@ -299,24 +299,24 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
 
   return (
     <div
-      className="relative flex flex-col justify-between w-full h-full bg-slate-900/90 backdrop-blur-xl border border-red-950/60 rounded-2xl p-3.5 shadow-xl text-slate-100"
-      aria-label="Redwing Autonomous Companion Drone Widget"
+      className="relative flex flex-col justify-between w-full h-full bg-slate-900/90 backdrop-blur-xl border border-emerald-950/60 rounded-2xl p-3.5 shadow-xl text-slate-100"
+      aria-label="Hoopoe AI Autonomous Companion Drone Widget"
     >
       {/* Module Header with User Tag & Voice Toggle */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-400">
+          <div className="w-7 h-7 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-              <span>Redwing Co-Pilot</span>
-              <span className="text-[9px] px-1 py-0.2 rounded bg-red-950/80 text-red-300 border border-red-800/60 font-mono">
-                EXO-7
+              <span>Hoopoe AI Co-Pilot</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 font-mono">
+                AI HUD
               </span>
             </h3>
-            <span className="text-[10px] text-red-400 font-medium">
-              Flying escort with {userName}
+            <span className="text-[10px] text-emerald-400 font-medium">
+              Cruising companion with {userName}
             </span>
           </div>
         </div>
@@ -346,14 +346,14 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
         </button>
       </div>
 
-      {/* Tiny Animated Redwing Drone & Interactive Speech Bubble */}
-      <div className="flex items-center gap-2.5 my-2 p-2.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 rounded-xl border border-red-900/40 hover:border-red-500/40 transition-colors">
+      {/* Tiny Animated Hoopoe Drone & Interactive Speech Bubble */}
+      <div className="flex items-center gap-2.5 my-2 p-2.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 rounded-xl border border-emerald-900/40 hover:border-emerald-500/40 transition-colors">
         <button
           type="button"
           onClick={() => triggerCasualCompanionBanter('spontaneous', true)}
-          className="shrink-0 group focus:outline-none focus:ring-2 focus:ring-red-500 rounded-xl p-1 relative cursor-pointer"
-          title={`Tap Redwing to chat casually with ${userName}`}
-          aria-label="Tap Redwing combat drone for casual banter"
+          className="shrink-0 group focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-xl p-1 relative cursor-pointer"
+          title={`Tap Hoopoe AI to chat casually with ${userName}`}
+          aria-label="Tap Hoopoe AI companion drone for casual banter"
         >
           <HoopoMascot
             size="md"
@@ -361,14 +361,14 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
             isFlapping={isFlapping}
             className="group-hover:scale-110 transition-transform"
           />
-          <div className="absolute -bottom-1 -right-1 bg-red-600 text-white text-[8px] font-bold px-1 rounded-full uppercase shadow">
+          <div className="absolute -bottom-1 -right-1 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded-full uppercase shadow">
             TAP
           </div>
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-red-400">Redwing</span>
+            <span className="text-[11px] font-bold text-emerald-400">Hoopoe AI</span>
             {mood === 'alert_speed' && currentSpeed > speedLimit && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
                 Slow Down!
@@ -392,7 +392,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
           </div>
           <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-3 leading-snug">
             {isAiLoading
-              ? 'Redwing is analyzing road conditions...'
+              ? 'Hoopoe AI is analyzing road conditions...'
               : activeAlert
               ? activeAlert.message
               : `Cruising along with you, ${userName}! Tap my wings anytime for casual road thoughts, or I'll drop notes when something comes up.`}
