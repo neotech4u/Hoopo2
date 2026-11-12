@@ -26,13 +26,10 @@ interface SpeedGaugeProps {
   idleSeconds: number;
   isGpsLiveMode?: boolean;
   gpsAccuracy?: number | null;
-  onSpeedChange?: (newSpeed: number) => void;
   onGearChange: (newGear: 'P' | 'R' | 'N' | 'D' | 'S') => void;
   onToggleCruise?: () => void;
   onToggleUnit: () => void;
   onToggleIgnition: () => void;
-  onFastTriggerIdle40?: () => void;
-  onToggleGpsLiveMode?: () => void;
 }
 
 export const SpeedGauge: React.FC<SpeedGaugeProps> = ({
@@ -45,15 +42,12 @@ export const SpeedGauge: React.FC<SpeedGaugeProps> = ({
   ignitionOn,
   tripDistance,
   idleSeconds,
-  isGpsLiveMode = false,
+  isGpsLiveMode = true,
   gpsAccuracy = null,
-  onSpeedChange,
   onGearChange,
   onToggleCruise,
   onToggleUnit,
   onToggleIgnition,
-  onFastTriggerIdle40,
-  onToggleGpsLiveMode,
 }) => {
   const maxSpeed = unit === 'km/h' ? 180 : 120;
   const effectiveSpeed = ignitionOn ? currentSpeed : 0;

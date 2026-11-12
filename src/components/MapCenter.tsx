@@ -21,6 +21,8 @@ import {
   ExternalLink,
   Globe,
   Loader2,
+  Plus,
+  Minus,
 } from 'lucide-react';
 import { FuelStation, RouteOption, WeatherCondition } from '../utils/companionLogic';
 import {
@@ -483,7 +485,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     tileLayerRef.current = newTileLayer;
   }, [mapTileType, nightMode]);
 
-  // Handle Real User Location updates (GPS)
+  // Handle Real User Location updates (GPS): Automatically pins and centers
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !realUserLocation) return;
@@ -513,8 +515,17 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       userGpsMarkerRef.current = marker;
     }
 
-    map.flyTo(realUserLocation, 14, { duration: 1.2 });
-  }, [realUserLocation]);
+    // Auto-pin vehicle marker to exact real GPS position
+    if (carMarkerRef.current) {
+      carMarkerRef.current.setLatLng(realUserLocation);
+    }
+
+    if (followCar) {
+      map.panTo(realUserLocation, { animate: true, duration: 0.4 });
+    } else {
+      map.flyTo(realUserLocation, 16, { duration: 1.0 });
+    }
+  }, [realUserLocation, followCar]);
 
   // Update Route Polyline whenever activeRoute changes
   useEffect(() => {
@@ -560,11 +571,14 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     }
   }, [activeRoute, realUserLocation]);
 
-  // Update Car Position based on progressKm
+  // Update Car Position based on progressKm (when GPS is not available)
   useEffect(() => {
     const map = mapInstanceRef.current;
     const carMarker = carMarkerRef.current;
     if (!map || !carMarker || !activeRoute.waypoints.length) return;
+
+    // If real GPS is locked, GPS updates handle car marker position
+    if (realUserLocation) return;
 
     const totalPoints = activeRoute.waypoints.length;
     const fraction = Math.min(Math.max(progressKm / activeRoute.distanceKm, 0), 1);
@@ -588,7 +602,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
     const step = Math.min(Math.floor(fraction * navInstructions.length), navInstructions.length - 1);
     setNavStepIndex(step);
-  }, [progressKm, activeRoute, followCar]);
+  }, [realUserLocation, progressKm, activeRoute, followCar]);
 
   // Render Traffic Layers
   useEffect(() => {
@@ -1193,6 +1207,47 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
       {/* Main Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-10" />
+
+      {/* Floating Zoom & GPS Recenter Controls (Right side of Map) */}
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2 bg-slate-900/85 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800 shadow-xl">
+        <button
+          type="button"
+          onClick={() => mapInstanceRef.current?.zoomIn()}
+          className="w-9 h-9 rounded-xl bg-slate-850 hover:bg-slate-750 text-slate-200 hover:text-white flex items-center justify-center transition-all border border-slate-750 active:scale-95 shadow-sm"
+          title="Zoom In"
+          aria-label="Zoom In"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => mapInstanceRef.current?.zoomOut()}
+          className="w-9 h-9 rounded-xl bg-slate-850 hover:bg-slate-750 text-slate-200 hover:text-white flex items-center justify-center transition-all border border-slate-750 active:scale-95 shadow-sm"
+          title="Zoom Out"
+          aria-label="Zoom Out"
+        >
+          <Minus className="w-5 h-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (realUserLocation && mapInstanceRef.current) {
+              mapInstanceRef.current.flyTo(realUserLocation, 16, { animate: true, duration: 1 });
+            } else {
+              onRequestLocation();
+            }
+          }}
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border active:scale-95 shadow-sm ${
+            gpsStatus === 'locked'
+              ? 'bg-sky-500/20 hover:bg-sky-500/30 border-sky-500/60 text-sky-400'
+              : 'bg-slate-850 hover:bg-slate-750 border-slate-750 text-slate-300'
+          }`}
+          title="Center on Live GPS Location"
+          aria-label="Center on Live GPS Location"
+        >
+          <Crosshair className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* 4. Floating Map Controls Bar (Bottom of Map) */}
       <div className="absolute bottom-2 inset-x-2 z-30 flex flex-wrap items-center justify-between gap-1.5 p-2 bg-slate-900/85 backdrop-blur-md rounded-xl border border-slate-800 shadow-lg">

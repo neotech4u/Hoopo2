@@ -44,7 +44,6 @@ import { PetrolExpenseModal } from './components/PetrolExpenseModal';
 import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
-import { BootAnimation } from './components/BootAnimation';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 
 import {
@@ -259,16 +258,6 @@ export default function App() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // 1. Boot Animation State (plays on first launch / session start)
-  const [isBooting, setIsBooting] = useState<boolean>(() => {
-    try {
-      if (isAutoStart) return false;
-      return sessionStorage.getItem('hoopoe_boot_played') !== 'true';
-    } catch {
-      return true;
-    }
-  });
-
   // 3. Navigation & Map State
   const [activeRoute, setActiveRoute] = useState<RouteOption>(SAMPLE_ROUTES[0]);
   const [progressKm, setProgressKm] = useState(0);
@@ -278,18 +267,17 @@ export default function App() {
   const [showFuelStations, setShowFuelStations] = useState(true);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
 
-  // 4. Real Location & Hardware GPS Speedometer
+  // 4. Real Location & Hardware GPS Speedometer (Automatic Live Mode)
   const [realUserLocation, setRealUserLocation] = useState<[number, number] | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<'idle' | 'loading' | 'locked' | 'denied'>('idle');
+  const [gpsStatus, setGpsStatus] = useState<'idle' | 'loading' | 'locked' | 'denied'>('loading');
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
-  const [isGpsLiveMode, setIsGpsLiveMode] = useState(false);
+  const [isGpsLiveMode, setIsGpsLiveMode] = useState(true);
   const [calculatedGpsSpeed, setCalculatedGpsSpeed] = useState(0);
 
   // Track previous GPS coordinates to calculate Haversine ground speed
   const prevGpsPosRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
 
   // 5. Vehicle Cluster State
-  const [simulatedSpeed, setSimulatedSpeed] = useState(72);
   const [speedLimit, setSpeedLimit] = useState(80);
   const [gear, setGear] = useState<'P' | 'R' | 'N' | 'D' | 'S'>('D');
   const [unit, setUnit] = useState<'km/h' | 'mph'>('km/h');
@@ -297,15 +285,15 @@ export default function App() {
   const [fuelLevel, setFuelLevel] = useState(78);
   const [odometerKm, setOdometerKm] = useState(14250);
 
-  // Effective velocity: resolves real GPS speed when live mode is active, else simulated speedometer
-  const currentSpeed = isGpsLiveMode ? calculatedGpsSpeed : simulatedSpeed;
+  // Effective velocity: Pure live GPS hardware speed
+  const currentSpeed = calculatedGpsSpeed;
 
   // 6. Ignition & Trip Telematics State
   const [ignitionOn, setIgnitionOn] = useState(true);
   const [tripDistance, setTripDistance] = useState(0);
   const [tripSeconds, setTripSeconds] = useState(0);
   const [tripStartTime, setTripStartTime] = useState<Date>(new Date());
-  const [tripMaxSpeed, setTripMaxSpeed] = useState(72);
+  const [tripMaxSpeed, setTripMaxSpeed] = useState(0);
   const [latestRating, setLatestRating] = useState<DrivingRating | null>(null);
 
   // 7. Idle Seconds Counter (Increments when ignition ON and speed === 0)
@@ -557,7 +545,6 @@ export default function App() {
     setTripLogs((prev) => [newTrip, ...prev]);
 
     setIgnitionOn(false);
-    setSimulatedSpeed(0);
     setCalculatedGpsSpeed(0);
     setCruiseControlActive(false);
 
@@ -577,8 +564,7 @@ export default function App() {
       setTripStartTime(new Date());
       setTripDistance(0);
       setTripSeconds(0);
-      setTripMaxSpeed(60);
-      setSimulatedSpeed(60);
+      setTripMaxSpeed(0);
 
       soundEngine.playGreetingChime();
       if (voiceEnabled) {
@@ -604,10 +590,6 @@ export default function App() {
         setGpsAccuracy(pos.coords.accuracy);
         setGpsStatus('locked');
         setIsGpsLiveMode(true);
-
-        if (voiceEnabled) {
-          speakHoopoMessage(`${userName}, exact GPS coordinates acquired. Live speedometer engaged.`);
-        }
       },
       (err) => {
         console.warn('Geolocation error:', err);
@@ -616,9 +598,14 @@ export default function App() {
           speakHoopoMessage(`${userName}, could not lock GPS. Please ensure location permissions are granted.`);
         }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 20000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
+
+  // Automatically acquire GPS and pin position on app startup
+  useEffect(() => {
+    handleRequestLocation();
+  }, []);
 
   const handleDuaModalClose = () => {
     setShowDuaModal(false);
@@ -647,29 +634,9 @@ export default function App() {
     setPetrolLogs((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleSpeedChange = (newSpeed: number) => {
-    if (!ignitionOn || isGpsLiveMode) return;
-    setSimulatedSpeed(newSpeed);
-    setTripMaxSpeed((m) => Math.max(m, newSpeed));
-    if (cruiseControlActive && Math.abs(newSpeed - 75) > 5) {
-      setCruiseControlActive(false);
-    }
-  };
-
-  const handleSlowDownToLimit = () => {
-    if (!isGpsLiveMode) {
-      setSimulatedSpeed(speedLimit);
-    }
-  };
-
   const handleToggleCruise = () => {
-    if (!ignitionOn || isGpsLiveMode) return;
-    if (!cruiseControlActive) {
-      setCruiseControlActive(true);
-      setSimulatedSpeed(75);
-    } else {
-      setCruiseControlActive(false);
-    }
+    if (!ignitionOn) return;
+    setCruiseControlActive((prev) => !prev);
   };
 
   const handleSelectStation = (station: FuelStation) => {
@@ -873,17 +840,10 @@ export default function App() {
               idleSeconds={idleSeconds}
               isGpsLiveMode={isGpsLiveMode}
               gpsAccuracy={gpsAccuracy}
-              onSpeedChange={handleSpeedChange}
               onGearChange={setGear}
               onToggleCruise={handleToggleCruise}
               onToggleUnit={() => setUnit(unit === 'km/h' ? 'mph' : 'km/h')}
               onToggleIgnition={handleToggleIgnition}
-              onToggleGpsLiveMode={() => setIsGpsLiveMode(!isGpsLiveMode)}
-              onFastTriggerIdle40={() => {
-                setIdleSeconds(40);
-                setSimulatedSpeed(0);
-                setCalculatedGpsSpeed(0);
-              }}
             />
           </div>
 
@@ -963,7 +923,7 @@ export default function App() {
               voiceEnabled={voiceEnabled}
               nowPlayingTrack={isRadioPlaying ? `Radio ${radioFreq} MHz` : 'Peaceful Travel Audio'}
               tripMinutes={Math.round(tripSeconds / 60) || 12}
-              onSlowDown={handleSlowDownToLimit}
+              onSlowDown={() => soundEngine.playGreetingChime()}
               onTurnOffIgnition={handleToggleIgnition}
               onLocateMosque={() => setShowFuelModal(true)}
               onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
@@ -1003,20 +963,8 @@ export default function App() {
         </section>
       </main>
 
-      {/* 1. First-Time Automotive Boot Animation Sequence */}
-      {isBooting && (
-        <BootAnimation
-          onComplete={() => {
-            setIsBooting(false);
-            try {
-              sessionStorage.setItem('hoopoe_boot_played', 'true');
-            } catch {}
-          }}
-        />
-      )}
-
       {/* Opening Travel Dua Modal with Tamil translation */}
-      <TravelDuaModal isOpen={!isBooting && showDuaModal} onClose={handleDuaModalClose} />
+      <TravelDuaModal isOpen={showDuaModal} onClose={handleDuaModalClose} />
 
       {/* Islamic Travel Greeting Banner */}
       <IslamicGreetingBanner
@@ -1051,7 +999,6 @@ export default function App() {
             setTripDistance(0);
             setTripSeconds(0);
             setIdleSeconds(0);
-            setSimulatedSpeed(60);
           }}
         />
       )}
