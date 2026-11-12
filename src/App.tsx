@@ -482,30 +482,7 @@ export default function App() {
     return () => clearInterval(driveInterval);
   }, [ignitionOn, currentSpeed]);
 
-  // 14. Periodic Ambient Travel Friend Chatter (every ~3.5 mins of driving)
-  useEffect(() => {
-    let chatterTimer: any = null;
-    if (ignitionOn && currentSpeed > 20 && voiceEnabled) {
-      chatterTimer = setInterval(() => {
-        const categories: Array<'weather' | 'music' | 'break' | 'smooth_driving'> = [
-          'weather',
-          'music',
-          'break',
-          'smooth_driving',
-        ];
-        const pickedCategory = categories[Math.floor(Math.random() * categories.length)];
-        const friendlyRemark = generateFriendlyCompanionComment(userName, pickedCategory, {
-          speed: currentSpeed,
-          weatherCondition: upcomingRain ? upcomingRain.condition : 'Clear',
-          tripMinutes: Math.round(tripSeconds / 60) || 12,
-        });
-        speakHoopoMessage(friendlyRemark);
-      }, 210000); // 3.5 minutes
-    }
-    return () => clearInterval(chatterTimer);
-  }, [ignitionOn, currentSpeed, voiceEnabled, userName, upcomingRain, tripSeconds]);
-
-  // Request AI Companion Comment via Server-Side Gemini API
+  // 14. Request AI Companion Comment via Server-Side Gemini API or Local Engine
   const handleRequestAIComment = async (
     category: 'weather' | 'music' | 'break' | 'spontaneous'
   ): Promise<string | void> => {

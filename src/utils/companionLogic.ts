@@ -323,7 +323,7 @@ export function generateFriendlyCompanionComment(
   switch (category) {
     case 'weather':
       if (context?.weatherCondition?.toLowerCase().includes('rain')) {
-        return `${cleanName}, looks like skies are getting cloudy. Don't worry, Hoopo's radar is keeping an eye on the path for us.`;
+        return `${cleanName}, looks like skies are getting cloudy. Don't worry, Hoopoe's radar is keeping an eye on the path for us.`;
       }
       return `${cleanName}, the skies are wonderfully clear today. Perfect cruising weather for our road trip, Alhamdulillah!`;
 
@@ -355,6 +355,107 @@ export function generateFriendlyCompanionComment(
       ];
       return generalComments[Math.floor(Math.random() * generalComments.length)];
   }
+}
+
+/**
+ * Interactive Companion Dialogue Responder
+ * When the user responds/answers back to Hoopoe AI, this generates an immediate,
+ * context-aware conversational reply so dialogue flows naturally without delay.
+ */
+export function generateCompanionDialogueReply(
+  userUtterance: string,
+  userName: string,
+  context?: {
+    speed?: number;
+    weatherCondition?: string;
+    musicTrack?: string;
+    tripMinutes?: number;
+    destinationName?: string;
+  }
+): string {
+  const cleanName = userName || 'Friend';
+  const query = (userUtterance || '').toLowerCase().trim();
+
+  if (query.includes('weather') || query.includes('rain') || query.includes('cloud')) {
+    if (context?.weatherCondition && context.weatherCondition.toLowerCase().includes('rain')) {
+      return `${cleanName}, we have some rain ahead on our corridor. Wipers and gentle braking are recommended. I've got your back!`;
+    }
+    return `${cleanName}, weather is looking bright and clear ahead. Great visibility for our drive!`;
+  }
+
+  if (
+    query.includes('route') ||
+    query.includes('destination') ||
+    query.includes('direction') ||
+    query.includes('far') ||
+    query.includes('where')
+  ) {
+    const dest = context?.destinationName || 'your destination';
+    return `${cleanName}, we are locked into ${dest}. The road path is charted and traffic conditions look smooth!`;
+  }
+
+  if (
+    query.includes('break') ||
+    query.includes('rest') ||
+    query.includes('coffee') ||
+    query.includes('stop') ||
+    query.includes('tired')
+  ) {
+    return `${cleanName}, great idea! Taking a 5-minute break refreshes your alertness. Let's pull in at the next safe roadside plaza or fuel pump.`;
+  }
+
+  if (
+    query.includes('fuel') ||
+    query.includes('petrol') ||
+    query.includes('diesel') ||
+    query.includes('gas')
+  ) {
+    return `${cleanName}, fuel monitoring is active. Whenever you need a top-up, check the fuel stations layer on our cockpit map!`;
+  }
+
+  if (query.includes('speed') || query.includes('fast') || query.includes('slow')) {
+    const spd = Math.round(context?.speed || 0);
+    return `${cleanName}, you're cruising at ${spd} km/h. Keep that steady flow, it protects your engine and saves fuel.`;
+  }
+
+  if (
+    query.includes('dua') ||
+    query.includes('prayer') ||
+    query.includes('dhikr') ||
+    query.includes('salah')
+  ) {
+    return `${cleanName}, SubhanAllah, traveling with dhikr brings true barakah to our road. Subhanallazi sakh-khara lana haza wa ma kunna lahu muqrinin.`;
+  }
+
+  if (
+    query.includes('music') ||
+    query.includes('radio') ||
+    query.includes('song') ||
+    query.includes('nasheed')
+  ) {
+    return `${cleanName}, good tunes make every kilometer feel effortless. Tune the radio deck or play your favorites anytime!`;
+  }
+
+  if (query.includes('thank') || query.includes('shukran') || query.includes('thanks')) {
+    return `${cleanName}, you're very welcome! Always an absolute pleasure being your co-pilot.`;
+  }
+
+  if (
+    query.includes('how are you') ||
+    query.includes("what's up") ||
+    query.includes('sup') ||
+    query.includes('hello') ||
+    query.includes('hi')
+  ) {
+    return `Hey ${cleanName}! Avionics and radar are at 100%. Enjoying the drive right beside you. What's on your mind?`;
+  }
+
+  const generalResponses = [
+    `I hear you, ${cleanName}! I'm tracking our route and keeping the cabin company. Anything specific you'd like to check?`,
+    `Got it, ${cleanName}! Road is wide open. Tell me if you need weather updates, rest stops, or prayer timings anytime.`,
+    `Right on, ${cleanName}! Glad we're traveling together today. Let's make this a smooth and memorable journey.`,
+  ];
+  return generalResponses[Math.floor(Math.random() * generalResponses.length)];
 }
 
 /* =======================================================================

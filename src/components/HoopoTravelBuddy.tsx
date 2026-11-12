@@ -15,6 +15,9 @@ import {
   Award,
   Radio,
   Flame,
+  Send,
+  Mic,
+  MessageSquare,
 } from 'lucide-react';
 import { HoopoMascot, HoopoMood } from './HoopoMascot';
 import { soundEngine, speakHoopoMessage } from '../utils/audioSynthesizer';
@@ -27,6 +30,7 @@ import {
   formatIdleCO2Alert,
   formatPrayerAlert,
   generateFriendlyCompanionComment,
+  generateCompanionDialogueReply,
 } from '../utils/companionLogic';
 
 export interface HoopoNotification {
@@ -88,7 +92,10 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
   const [lastPrayerAlertTime, setLastPrayerAlertTime] = useState(0);
   const [lastCO2AlertTime, setLastCO2AlertTime] = useState(0);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [lastSpontaneousSpokeTime, setLastSpontaneousSpokeTime] = useState(0);
+  const [lastSpontaneousSpokeTime, setLastSpontaneousSpokeTime] = useState(() => Date.now());
+  const nextSpontaneousGapMsRef = useRef<number>(225000 + Math.floor(Math.random() * 110000));
+  const [userReplyInput, setUserReplyInput] = useState('');
+  const [isListeningMic, setIsListeningMic] = useState(false);
 
   // 1. Unsafe Speed Monitor with User Name
   useEffect(() => {
@@ -213,15 +220,19 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     }
   }, [isPrayerApproaching, nextPrayer, prayerMinutesLeft, voiceEnabled, lastPrayerAlertTime, mood, onLocateMosque, userName]);
 
-  // 5. Casual Spontaneous Banter Trigger (Randomly drops friendly remarks while driving, replacing chips)
+  // 5. Casual Spontaneous Banter Trigger
+  // Random time interval with at least > 220s gap (225s - 335s) between ambient remarks
   useEffect(() => {
     let spontaneousInterval: any = null;
-    if (ignitionOn && currentSpeed > 15 && voiceEnabled) {
+    if (ignitionOn && voiceEnabled) {
       spontaneousInterval = setInterval(() => {
         const now = Date.now();
-        // Spontaneous talk interval ~90 to 140 seconds
-        if (now - lastSpontaneousSpokeTime > 90000 && !activeAlert) {
+        const targetGap = nextSpontaneousGapMsRef.current;
+        if (now - lastSpontaneousSpokeTime >= targetGap && !activeAlert) {
           setLastSpontaneousSpokeTime(now);
+          // Set next random interval (always > 220 seconds)
+          nextSpontaneousGapMsRef.current = 225000 + Math.floor(Math.random() * 110000);
+
           const categories: Array<'weather' | 'music' | 'break' | 'spontaneous'> = [
             'weather',
             'music',
@@ -231,15 +242,95 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
           const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
           triggerCasualCompanionBanter(chosenCategory, false);
         }
-      }, 30000);
+      }, 10000);
     }
     return () => clearInterval(spontaneousInterval);
-  }, [ignitionOn, currentSpeed, voiceEnabled, lastSpontaneousSpokeTime, activeAlert, userName]);
+  }, [ignitionOn, voiceEnabled, lastSpontaneousSpokeTime, activeAlert, userName]);
 
   const handleDismissAlert = () => {
     setActiveAlert(null);
     if (currentSpeed <= speedLimit && idleSeconds < 40) {
       setMood('normal');
+    }
+  };
+
+  // User Answers Back: Dialogue continues ASAP without waiting for any 220s timer
+  const handleUserAnswerBack = (replyText: string) => {
+    const text = replyText.trim();
+    if (!text) return;
+
+    setUserReplyInput('');
+    setIsAiLoading(true);
+    setMood('greeting');
+    setIsFlapping(true);
+    soundEngine.playGreetingChime();
+
+    // Generate immediate context-aware companion response
+    const companionResponse = generateCompanionDialogueReply(text, userName, {
+      speed: currentSpeed,
+      weatherCondition: upcomingRain ? upcomingRain.condition : 'Clear',
+      musicTrack: nowPlayingTrack,
+      tripMinutes,
+    });
+
+    setIsAiLoading(false);
+    setTimeout(() => {
+      setIsFlapping(false);
+      setMood('normal');
+    }, 2200);
+
+    if (voiceEnabled) {
+      speakHoopoMessage(companionResponse);
+    }
+
+    setActiveAlert({
+      id: `dialogue-${Date.now()}`,
+      type: 'companion',
+      title: `Hoopoe AI &bull; ${userName}`,
+      message: companionResponse,
+      actionText: 'Got It!',
+      onAction: () => setActiveAlert(null),
+      timestamp: new Date(),
+    });
+
+    // Reset spontaneous timer so next ambient talk waits at least > 220 seconds
+    setLastSpontaneousSpokeTime(Date.now());
+    nextSpontaneousGapMsRef.current = 225000 + Math.floor(Math.random() * 110000);
+  };
+
+  const handleToggleVoiceInput = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      handleUserAnswerBack('How is the road ahead?');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListeningMic(true);
+      };
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) {
+          handleUserAnswerBack(transcript);
+        }
+      };
+      recognition.onerror = () => {
+        setIsListeningMic(false);
+      };
+      recognition.onend = () => {
+        setIsListeningMic(false);
+      };
+      recognition.start();
+    } catch {
+      setIsListeningMic(false);
+      handleUserAnswerBack('How is the road ahead?');
     }
   };
 
@@ -397,6 +488,69 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
               ? activeAlert.message
               : `Cruising along with you, ${userName}! Tap my wings anytime for casual road thoughts, or I'll drop notes when something comes up.`}
           </p>
+        </div>
+      </div>
+
+      {/* Interactive Answer-Back Bar & Quick Travel Dialogue Chips */}
+      <div className="flex flex-col gap-1.5 my-1">
+        {/* Quick Driver Response Chips */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+          {[
+            { label: "Route ahead?", text: "How is the road ahead?" },
+            { label: "Rest plaza?", text: "Where can we take a quick rest break?" },
+            { label: "Travel tip", text: "Give me a road trip tip" },
+            { label: "Dua / Dhikr", text: "Remind me of the travel dua" },
+          ].map((chip, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleUserAnswerBack(chip.text)}
+              className="px-2 py-0.5 rounded-full bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-700/50 text-[10px] text-emerald-300 font-medium whitespace-nowrap transition-colors flex items-center gap-1 active:scale-95"
+            >
+              <MessageSquare className="w-2.5 h-2.5 text-emerald-400" />
+              <span>{chip.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Inline Answer-Back Input */}
+        <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-700/80 rounded-xl px-2 py-1 focus-within:border-emerald-500/80 transition-colors">
+          <input
+            type="text"
+            value={userReplyInput}
+            onChange={(e) => setUserReplyInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleUserAnswerBack(userReplyInput);
+              }
+            }}
+            placeholder={`Reply to Hoopoe...`}
+            className="flex-1 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none min-w-0"
+          />
+          <button
+            type="button"
+            onClick={handleToggleVoiceInput}
+            className={`p-1 rounded-lg transition-colors ${
+              isListeningMic
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'text-slate-400 hover:text-emerald-400'
+            }`}
+            title="Speak your reply"
+            aria-label="Voice input"
+          >
+            <Mic className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleUserAnswerBack(userReplyInput)}
+            disabled={!userReplyInput.trim()}
+            className="p-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:pointer-events-none text-white transition-all shadow-sm"
+            title="Send reply"
+            aria-label="Send reply"
+          >
+            <Send className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 

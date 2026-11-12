@@ -19,6 +19,7 @@ import {
   formatIdleCO2Alert,
   formatPrayerAlert,
   generateFriendlyCompanionComment,
+  generateCompanionDialogueReply,
   PrayerTime,
   WeatherCondition,
 } from './companionLogic';
@@ -145,4 +146,22 @@ test('calculateDrivingRating personalizes feedback and calculates grades', () =>
   assert.ok(rating.overallScore >= 90);
   assert.equal(rating.grade, 'A+');
   assert.ok(rating.feedback.includes('Bilal'));
+});
+
+test('generateCompanionDialogueReply immediately returns context-aware friendly dialogue when user answers back', () => {
+  const weatherReply = generateCompanionDialogueReply('how is the weather?', 'Usman', {
+    weatherCondition: 'Rain',
+  });
+  assert.ok(weatherReply.includes('Usman'));
+  assert.ok(weatherReply.toLowerCase().includes('rain'));
+
+  const routeReply = generateCompanionDialogueReply('how far to our destination?', 'Usman', {
+    destinationName: 'Tirunelveli Junction',
+  });
+  assert.ok(routeReply.includes('Usman'));
+  assert.ok(routeReply.includes('Tirunelveli Junction'));
+
+  const breakReply = generateCompanionDialogueReply('I feel like taking a break', 'Usman');
+  assert.ok(breakReply.includes('Usman'));
+  assert.ok(breakReply.toLowerCase().includes('break'));
 });
