@@ -6,9 +6,6 @@ import {
   Layers,
   CloudRain,
   Fuel,
-  Play,
-  Pause,
-  RotateCcw,
   Crosshair,
   MapPin,
   Search,
@@ -163,7 +160,6 @@ interface MapCenterProps {
   progressKm: number;
   fuelStations: FuelStation[];
   rainForecast: WeatherCondition[];
-  isDrivingSimulating: boolean;
   nightMode: boolean;
   showTraffic: boolean;
   showRainRadar: boolean;
@@ -171,8 +167,6 @@ interface MapCenterProps {
   realUserLocation: [number, number] | null;
   gpsStatus: 'idle' | 'loading' | 'locked' | 'denied';
   onRequestLocation: () => void;
-  onToggleSimulateDrive: () => void;
-  onResetSimulateDrive: () => void;
   onToggleTraffic: () => void;
   onToggleRainRadar: () => void;
   onToggleFuelStations: () => void;
@@ -186,7 +180,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
   progressKm,
   fuelStations,
   rainForecast,
-  isDrivingSimulating,
   nightMode,
   showTraffic,
   showRainRadar,
@@ -194,8 +187,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
   realUserLocation,
   gpsStatus,
   onRequestLocation,
-  onToggleSimulateDrive,
-  onResetSimulateDrive,
   onToggleTraffic,
   onToggleRainRadar,
   onToggleFuelStations,
@@ -561,7 +552,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     });
     destinationMarkerRef.current = L.marker(endCoord, { icon: destIcon }).addTo(map);
 
-    if (!isDrivingSimulating && !realUserLocation) {
+    if (!realUserLocation) {
       map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
     }
   }, [activeRoute, realUserLocation]);
@@ -1051,42 +1042,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
       {/* 4. Floating Map Controls Bar (Bottom of Map) */}
       <div className="absolute bottom-2 inset-x-2 z-30 flex flex-wrap items-center justify-between gap-1.5 p-2 bg-slate-900/85 backdrop-blur-md rounded-xl border border-slate-800 shadow-lg">
-        {/* Drive Simulation Controls */}
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onToggleSimulateDrive}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-              isDrivingSimulating
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-            }`}
-            aria-label={isDrivingSimulating ? 'Pause Drive' : 'Simulate Drive'}
-          >
-            {isDrivingSimulating ? (
-              <>
-                <Pause className="w-3 h-3 fill-current" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-3 h-3 fill-current" />
-                <span>Simulate</span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={onResetSimulateDrive}
-            className="p-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white transition-colors"
-            title="Reset to route start"
-            aria-label="Reset route start"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
         {/* Layer Toggles & GPS Location Access */}
         <div className="flex items-center gap-1">
           {/* Map Layer Mode Toggle (Google Road vs Satellite vs OSM) */}

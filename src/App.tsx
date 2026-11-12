@@ -44,6 +44,7 @@ import { PetrolExpenseModal } from './components/PetrolExpenseModal';
 import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { BootAnimation } from './components/BootAnimation';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 
 import {
@@ -241,10 +242,19 @@ export default function App() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
+  // 1. Boot Animation State (plays on first launch / session start)
+  const [isBooting, setIsBooting] = useState<boolean>(() => {
+    try {
+      if (isAutoStart) return false;
+      return sessionStorage.getItem('hoopoe_boot_played') !== 'true';
+    } catch {
+      return true;
+    }
+  });
+
   // 3. Navigation & Map State
   const [activeRoute, setActiveRoute] = useState<RouteOption>(SAMPLE_ROUTES[0]);
   const [progressKm, setProgressKm] = useState(0);
-  const [isDrivingSimulating, setIsDrivingSimulating] = useState(false);
   const [nightMode, setNightMode] = useState(true);
   const [showTraffic, setShowTraffic] = useState(true);
   const [showRainRadar, setShowRainRadar] = useState(true);
@@ -457,37 +467,20 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // 13. Trip Distance & Simulation Loop
+  // 13. Odometer & Trip Telematics Tracker (tracks real driving when vehicle is moving)
   useEffect(() => {
     let driveInterval: any = null;
-    if (isDrivingSimulating && ignitionOn) {
+    if (ignitionOn && currentSpeed > 0) {
       driveInterval = setInterval(() => {
-        const deltaKm = 0.35;
-        setProgressKm((prev) => {
-          const next = prev + deltaKm;
-          if (next >= activeRoute.distanceKm) {
-            setIsDrivingSimulating(false);
-            return activeRoute.distanceKm;
-          }
-          return next;
-        });
-
+        const deltaKm = currentSpeed / 3600; // km per second
         setTripDistance((prev) => prev + deltaKm);
         setTripSeconds((prev) => prev + 1);
         setOdometerKm((prev) => prev + deltaKm);
-
-        if (!cruiseControlActive && !isGpsLiveMode) {
-          setSimulatedSpeed((prev) => {
-            const jitter = (Math.random() - 0.48) * 3;
-            const updated = Math.min(130, Math.max(35, prev + jitter));
-            setTripMaxSpeed((m) => Math.max(m, updated));
-            return updated;
-          });
-        }
-      }, 600);
+        setTripMaxSpeed((m) => Math.max(m, currentSpeed));
+      }, 1000);
     }
     return () => clearInterval(driveInterval);
-  }, [isDrivingSimulating, ignitionOn, activeRoute.distanceKm, cruiseControlActive, isGpsLiveMode]);
+  }, [ignitionOn, currentSpeed]);
 
   // 14. Periodic Ambient Travel Friend Chatter (every ~3.5 mins of driving)
   useEffect(() => {
@@ -570,7 +563,6 @@ export default function App() {
     setTripLogs((prev) => [newTrip, ...prev]);
 
     setIgnitionOn(false);
-    setIsDrivingSimulating(false);
     setSimulatedSpeed(0);
     setCalculatedGpsSpeed(0);
     setCruiseControlActive(false);
@@ -936,7 +928,6 @@ export default function App() {
             progressKm={progressKm}
             fuelStations={SAMPLE_FUEL_STATIONS}
             rainForecast={SAMPLE_WEATHER}
-            isDrivingSimulating={isDrivingSimulating}
             nightMode={nightMode}
             showTraffic={showTraffic}
             showRainRadar={showRainRadar}
@@ -944,13 +935,6 @@ export default function App() {
             realUserLocation={realUserLocation}
             gpsStatus={gpsStatus}
             onRequestLocation={handleRequestLocation}
-            onToggleSimulateDrive={() => {
-              if (!ignitionOn) {
-                setIgnitionOn(true);
-              }
-              setIsDrivingSimulating(!isDrivingSimulating);
-            }}
-            onResetSimulateDrive={() => setProgressKm(0)}
             onToggleTraffic={() => setShowTraffic(!showTraffic)}
             onToggleRainRadar={() => setShowRainRadar(!showRainRadar)}
             onToggleFuelStations={() => setShowFuelStations(!showFuelStations)}
@@ -1025,8 +1009,20 @@ export default function App() {
         </section>
       </main>
 
+      {/* 1. First-Time Automotive Boot Animation Sequence */}
+      {isBooting && (
+        <BootAnimation
+          onComplete={() => {
+            setIsBooting(false);
+            try {
+              sessionStorage.setItem('hoopoe_boot_played', 'true');
+            } catch {}
+          }}
+        />
+      )}
+
       {/* Opening Travel Dua Modal with Tamil translation */}
-      <TravelDuaModal isOpen={showDuaModal} onClose={handleDuaModalClose} />
+      <TravelDuaModal isOpen={!isBooting && showDuaModal} onClose={handleDuaModalClose} />
 
       {/* Islamic Travel Greeting Banner */}
       <IslamicGreetingBanner
