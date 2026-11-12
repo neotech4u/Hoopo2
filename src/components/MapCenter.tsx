@@ -158,7 +158,7 @@ export const PRESET_SEARCH_DESTINATIONS: SearchDestination[] = [
 
 interface MapCenterProps {
   currentSpeed: number;
-  activeRoute: RouteOption;
+  activeRoute: RouteOption | null;
   progressKm: number;
   fuelStations: FuelStation[];
   rainForecast: WeatherCondition[];
@@ -270,14 +270,14 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
     const timer = setTimeout(async () => {
       setIsSearchingLive(true);
-      const userPos = realUserLocation || activeRoute.waypoints[0] || [8.7139, 77.7567];
+      const userPos = realUserLocation || activeRoute?.waypoints?.[0] || [8.7139, 77.7567];
       const results = await searchPlacesLive(searchQuery, userPos[0], userPos[1]);
       setLiveSearchResults(results);
       setIsSearchingLive(false);
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, realUserLocation, activeRoute.waypoints]);
+  }, [searchQuery, realUserLocation, activeRoute?.waypoints]);
 
   const handleToggleOfflineMode = () => {
     const next = !isOfflineModeActive;
@@ -398,7 +398,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const startCoord = realUserLocation || activeRoute.waypoints[0] || [8.7139, 77.7567];
+      const startCoord = realUserLocation || activeRoute?.waypoints?.[0] || [8.7139, 77.7567];
       const map = L.map(mapContainerRef.current, {
         center: startCoord,
         zoom: 13,
@@ -530,7 +530,19 @@ export const MapCenter: React.FC<MapCenterProps> = ({
   // Update Route Polyline whenever activeRoute changes
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !activeRoute.waypoints.length) return;
+    if (!map) return;
+
+    if (!activeRoute || !activeRoute.waypoints.length) {
+      if (routeLayerRef.current) {
+        map.removeLayer(routeLayerRef.current);
+        routeLayerRef.current = null;
+      }
+      if (destinationMarkerRef.current) {
+        map.removeLayer(destinationMarkerRef.current);
+        destinationMarkerRef.current = null;
+      }
+      return;
+    }
 
     if (routeLayerRef.current) {
       map.removeLayer(routeLayerRef.current);
@@ -575,7 +587,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
   useEffect(() => {
     const map = mapInstanceRef.current;
     const carMarker = carMarkerRef.current;
-    if (!map || !carMarker || !activeRoute.waypoints.length) return;
+    if (!map || !carMarker || !activeRoute || !activeRoute.waypoints.length) return;
 
     // If real GPS is locked, GPS updates handle car marker position
     if (realUserLocation) return;
@@ -610,7 +622,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     if (!group) return;
     group.clearLayers();
 
-    if (!showTraffic || activeRoute.waypoints.length < 4) return;
+    if (!showTraffic || !activeRoute || activeRoute.waypoints.length < 4) return;
 
     const pts = activeRoute.waypoints;
     const quarter = Math.floor(pts.length / 4);
@@ -694,7 +706,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
     if (!showRainRadar) return;
 
-    if (activeRoute.waypoints.length > 3) {
+    if (activeRoute && activeRoute.waypoints.length > 3) {
       const mid = activeRoute.waypoints[Math.floor(activeRoute.waypoints.length / 2)];
       L.circle(mid, {
         radius: 3500,
@@ -730,7 +742,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
   // Handle Destination Select & Start Navigation (with Live OSRM Road Calculation)
   const handleSelectDestination = async (dest: SearchDestination | LivePlaceResult) => {
-    const startCoord = realUserLocation || activeRoute.waypoints[0] || [8.7139, 77.7567];
+    const startCoord = realUserLocation || activeRoute?.waypoints?.[0] || [8.7139, 77.7567];
 
     const targetDest: SearchDestination = {
       id: dest.id,
@@ -802,6 +814,30 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     setSearchQuery('');
   };
 
+  // Immediate "Get Directions" trigger for search input
+  const handleSearchSubmit = () => {
+    if (!searchQuery.trim()) {
+      setIsDirectionsModalOpen(true);
+      return;
+    }
+
+    // Match preset destination
+    if (filteredDestinations.length > 0) {
+      handleSelectDestination(filteredDestinations[0]);
+      return;
+    }
+
+    // Match live geocoding result
+    if (liveSearchResults.length > 0) {
+      handleSelectDestination(liveSearchResults[0]);
+      return;
+    }
+
+    // Open directions modal with current query
+    setIsDirectionsModalOpen(true);
+    setIsSearchOpen(false);
+  };
+
   const navList = activeNavInstructions.length > 0 ? activeNavInstructions : navInstructions;
   const currentNav = navList[navStepIndex] || navList[0];
 
@@ -831,17 +867,25 @@ export const MapCenter: React.FC<MapCenterProps> = ({
         {/* ALWAYS-VISIBLE SEARCH BAR FOR DIRECTIONS & LOCATIONS */}
         <div className="flex-1 relative flex items-center bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 focus-within:border-blue-500 rounded-2xl px-3 py-1.5 shadow-2xl transition-all">
           <Search className="w-4 h-4 text-amber-400 mr-2 shrink-0" />
-          <input
-            type="text"
-            placeholder="Directions to / Search location (e.g. Madurai, Kanyakumari, Courtallam)..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              if (!isSearchOpen) setIsSearchOpen(true);
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearchSubmit();
             }}
-            onFocus={() => setIsSearchOpen(true)}
-            className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none min-w-0"
-          />
+            className="flex-1 flex items-center min-w-0"
+          >
+            <input
+              type="text"
+              placeholder="Directions to / Search location (e.g. Madurai, Kanyakumari, Courtallam)..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (!isSearchOpen) setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
+              className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none min-w-0"
+            />
+          </form>
           {searchQuery && (
             <button
               type="button"
@@ -853,26 +897,49 @@ export const MapCenter: React.FC<MapCenterProps> = ({
           )}
           <button
             type="button"
-            onClick={() => {
-              setIsDirectionsModalOpen(true);
-              setIsSearchOpen(false);
-            }}
-            className="ml-1.5 flex items-center gap-1 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shrink-0 transition-all shadow-md shadow-blue-900/40 active:scale-95"
-            title="Open Directions & Corridor Route Planner"
+            onClick={handleSearchSubmit}
+            className="ml-1.5 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white text-xs font-bold shrink-0 transition-all shadow-md shadow-blue-900/40 active:scale-95 cursor-pointer"
+            title="Get Directions to this location"
           >
             <Navigation className="w-3.5 h-3.5 text-white" />
-            <span>Directions</span>
+            <span>Get Directions</span>
           </button>
         </div>
 
-        {/* ETA & Distance Summary (Right) */}
-        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 px-3 shadow-2xl shrink-0 text-right">
-          <div className="text-xs sm:text-sm font-bold text-emerald-400 font-speed leading-none">
-            {Math.max(1, Math.round((activeRoute.distanceKm - progressKm) * 1.2))} MIN
-          </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
-            {Math.max(0, activeRoute.distanceKm - progressKm).toFixed(1)} km left
-          </div>
+        {/* ETA & Distance Summary or Free Drive Status (Right) */}
+        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 px-3 shadow-2xl shrink-0 text-right flex items-center gap-2">
+          {activeRoute ? (
+            <>
+              <div>
+                <div className="text-xs sm:text-sm font-bold text-emerald-400 font-speed leading-none">
+                  {Math.max(1, Math.round((activeRoute.distanceKm - progressKm) * 1.2))} MIN
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">
+                  {Math.max(0, activeRoute.distanceKm - progressKm).toFixed(1)} km left
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onSelectNewRoute) onSelectNewRoute(null as any);
+                }}
+                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                title="End Active Navigation Route"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </>
+          ) : (
+            <div>
+              <div className="text-xs sm:text-sm font-bold text-sky-400 font-speed leading-none flex items-center gap-1 justify-end">
+                <Compass className="w-3.5 h-3.5 text-sky-400" />
+                <span>FREE DRIVE</span>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">
+                Ready for Destination
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -914,11 +981,17 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                   </div>
                 </div>
 
-                <div className="text-right shrink-0 pl-2">
-                  <span className="text-xs font-bold text-emerald-400 font-mono">
-                    {dest.distanceKm} km
+                <div className="flex items-center gap-2 shrink-0 pl-2">
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-emerald-400 font-mono block">
+                      {dest.distanceKm} km
+                    </span>
+                    <span className="block text-[9px] text-slate-400">{dest.durationMins} min</span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 group-hover:from-blue-500 group-hover:to-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all">
+                    <span>Get Directions</span>
+                    <ArrowRight className="w-3 h-3" />
                   </span>
-                  <span className="block text-[9px] text-slate-400">{dest.durationMins} min</span>
                 </div>
               </button>
             ))}
@@ -949,13 +1022,17 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                   </div>
                 </div>
 
-                {place.distanceKm !== undefined && (
-                  <div className="text-right shrink-0 pl-2">
+                <div className="flex items-center gap-2 shrink-0 pl-2">
+                  {place.distanceKm !== undefined && (
                     <span className="text-xs font-bold text-sky-400 font-mono">
                       {place.distanceKm} km
                     </span>
-                  </div>
-                )}
+                  )}
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 group-hover:from-blue-500 group-hover:to-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all">
+                    <span>Get Directions</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
               </button>
             ))}
 
@@ -1072,12 +1149,18 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                     <p className="text-[10px] text-slate-400 truncate">{dest.address}</p>
                   </div>
                 </div>
-                <div className="text-right shrink-0 pl-2">
-                  <span className="text-xs font-bold text-blue-400 font-mono block">
-                    {dest.distanceKm} km
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-mono block">
-                    ~{dest.durationMins} min
+                <div className="flex items-center gap-2 shrink-0 pl-2">
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-blue-400 font-mono block">
+                      {dest.distanceKm} km
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-mono block">
+                      ~{dest.durationMins} min
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 group-hover:from-blue-500 group-hover:to-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all">
+                    <span>Get Directions</span>
+                    <Navigation className="w-3 h-3" />
                   </span>
                 </div>
               </button>
@@ -1103,13 +1186,17 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                     <p className="text-[10px] text-slate-400 truncate">{place.address}</p>
                   </div>
                 </div>
-                {place.distanceKm !== undefined && (
-                  <div className="text-right shrink-0 pl-2">
+                <div className="flex items-center gap-2 shrink-0 pl-2">
+                  {place.distanceKm !== undefined && (
                     <span className="text-xs font-bold text-sky-400 font-mono">
                       {place.distanceKm} km
                     </span>
-                  </div>
-                )}
+                  )}
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-emerald-600 group-hover:from-blue-500 group-hover:to-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-sm transition-all">
+                    <span>Get Directions</span>
+                    <Navigation className="w-3 h-3" />
+                  </span>
+                </div>
               </button>
             ))}
           </div>
@@ -1179,10 +1266,10 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             <button
               type="button"
               onClick={handleStartDirectionNavigation}
-              className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 transition-all"
+              className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 transition-all active:scale-95 cursor-pointer"
             >
               <Navigation className="w-3.5 h-3.5" />
-              <span>Start Cockpit HUD Route</span>
+              <span>Get Directions &amp; Start Navigation</span>
             </button>
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${selectedDestination.lat},${selectedDestination.lng}&travelmode=driving`}

@@ -10,5 +10,15 @@
       "keystorePath": "",
       "keystoreAlias": ""
     }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#0b0f19",
+      "androidScaleType": "CENTER_INSIDE",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
   }
 }

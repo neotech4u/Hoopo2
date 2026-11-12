@@ -10,10 +10,9 @@ interface HoopoMascotProps {
 }
 
 /**
- * Hoopo Autonomous Drone Mascot - Hoopoe AI Companion Drone
- * Inspired by the historic Hoopoe bird—symbol of travel guidance and navigation.
- * Features aerodynamic variable-geometry swept wings, glowing tactical HUD scanner eye,
- * dual underslung ion thrusters, and responsive state-based driving telemetry.
+ * Hoopoe AI - Futuristic In-Cabin Autonomous AI Companion Core
+ * Sleek, simple, and ultra-futuristic holographic nexus with concentric orbital rings,
+ * audio-reactive waveform iris, and state-based HUD telemetry illumination.
  */
 export const HoopoMascot: React.FC<HoopoMascotProps> = ({
   mood = 'normal',
@@ -25,337 +24,226 @@ export const HoopoMascot: React.FC<HoopoMascotProps> = ({
     sm: 'w-12 h-12',
     md: 'w-20 h-20',
     lg: 'w-28 h-28',
-    xl: 'w-40 h-40',
+    xl: 'w-36 h-36',
   }[size];
 
-  // Tactical drone glow aura based on state
-  const auraGlow = {
-    normal: 'drop-shadow(0 0 10px rgba(220, 38, 38, 0.45)) drop-shadow(0 0 6px rgba(6, 182, 212, 0.4))',
-    alert_speed: 'drop-shadow(0 0 18px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 26px rgba(185, 28, 28, 0.6))',
-    alert_rain: 'drop-shadow(0 0 14px rgba(56, 189, 248, 0.9)) drop-shadow(0 0 20px rgba(14, 165, 233, 0.5))',
-    alert_prayer: 'drop-shadow(0 0 16px rgba(16, 185, 129, 0.9)) drop-shadow(0 0 22px rgba(5, 150, 105, 0.5))',
-    greeting: 'drop-shadow(0 0 14px rgba(245, 158, 11, 0.85)) drop-shadow(0 0 20px rgba(239, 68, 68, 0.5))',
-    happy: 'drop-shadow(0 0 14px rgba(16, 185, 129, 0.8))',
+  // Futuristic Holographic Theme Configuration
+  const theme = {
+    normal: {
+      primary: '#06b6d4',      // Electric Cyan
+      secondary: '#3b82f6',    // Cyber Blue
+      accent: '#22d3ee',       // Bright Neon Cyan
+      glow: 'rgba(6, 182, 212, 0.45)',
+      dropGlow: 'drop-shadow(0 0 14px rgba(6, 182, 212, 0.6)) drop-shadow(0 0 24px rgba(59, 130, 246, 0.35))',
+    },
+    alert_speed: {
+      primary: '#ef4444',      // Tactical Crimson
+      secondary: '#dc2626',
+      accent: '#f87171',
+      glow: 'rgba(239, 68, 68, 0.65)',
+      dropGlow: 'drop-shadow(0 0 16px rgba(239, 68, 68, 0.9)) drop-shadow(0 0 28px rgba(185, 28, 28, 0.6))',
+    },
+    alert_rain: {
+      primary: '#38bdf8',      // Sky Radar Blue
+      secondary: '#0284c7',
+      accent: '#7dd3fc',
+      glow: 'rgba(56, 189, 248, 0.55)',
+      dropGlow: 'drop-shadow(0 0 14px rgba(56, 189, 248, 0.75)) drop-shadow(0 0 22px rgba(2, 132, 199, 0.4))',
+    },
+    alert_prayer: {
+      primary: '#10b981',      // Sacred Emerald
+      secondary: '#059669',
+      accent: '#34d399',
+      glow: 'rgba(16, 185, 129, 0.55)',
+      dropGlow: 'drop-shadow(0 0 16px rgba(16, 185, 129, 0.8)) drop-shadow(0 0 24px rgba(5, 150, 105, 0.4))',
+    },
+    greeting: {
+      primary: '#f59e0b',      // Solar Amber
+      secondary: '#d97706',
+      accent: '#fbbf24',
+      glow: 'rgba(245, 158, 11, 0.55)',
+      dropGlow: 'drop-shadow(0 0 14px rgba(245, 158, 11, 0.8)) drop-shadow(0 0 22px rgba(217, 119, 6, 0.4))',
+    },
+    happy: {
+      primary: '#10b981',
+      secondary: '#14b8a6',
+      accent: '#2dd4bf',
+      glow: 'rgba(16, 185, 129, 0.55)',
+      dropGlow: 'drop-shadow(0 0 14px rgba(16, 185, 129, 0.8))',
+    },
   }[mood];
 
-  // Tactical optic scanner HUD color
-  const scannerColor = {
-    normal: '#06b6d4', // Stark cyan tracking optic
-    alert_speed: '#ef4444', // Red alert combat mode
-    alert_rain: '#38bdf8', // Atmospheric radar blue
-    alert_prayer: '#10b981', // Sacred emerald beacon
-    greeting: '#f59e0b', // Warm amber telemetry
-    happy: '#10b981',
-  }[mood];
-
-  // Thruster flame plasma color
-  const thrusterColor = mood === 'alert_speed' ? '#ef4444' : '#06b6d4';
+  const isActive = isFlapping || mood === 'alert_speed' || mood === 'greeting';
 
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none transition-all duration-300 ${sizeClasses} ${className}`}
-      style={{ filter: auraGlow }}
-      aria-label="Hoopoe AI Autonomous Avionics Drone Mascot"
+      className={`relative inline-flex items-center justify-center select-none ${sizeClasses} ${className}`}
+      style={{ filter: theme.dropGlow }}
+      aria-label="Hoopoe AI Futuristic Companion Nexus"
       role="img"
     >
-      {/* Hoopoe Avionic Drone SVG */}
       <svg
-        viewBox="0 0 180 180"
+        viewBox="0 0 140 140"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={`w-full h-full transition-transform duration-500 ${
-          isFlapping || mood === 'alert_speed'
-            ? 'animate-bounce'
-            : 'animate-[pulse_2.8s_ease-in-out_infinite]'
-        }`}
+        className="w-full h-full"
       >
         <defs>
-          {/* Hoopoe Avionic Crimson Red Plating Gradient */}
-          <linearGradient id="hoopoeCrimson" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f87171" />
-            <stop offset="25%" stopColor="#ef4444" />
-            <stop offset="60%" stopColor="#dc2626" />
-            <stop offset="90%" stopColor="#991b1b" />
-            <stop offset="100%" stopColor="#7f1d1d" />
-          </linearGradient>
-
-          {/* Secondary Crimson Shadow Gradient */}
-          <linearGradient id="hoopoeCrimsonDark" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="70%" stopColor="#991b1b" />
-            <stop offset="100%" stopColor="#450a0a" />
-          </linearGradient>
-
-          {/* Titanium Silver Wing Blade Edge Gradient */}
-          <linearGradient id="hoopoeTitaniumBlade" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="30%" stopColor="#e2e8f0" />
-            <stop offset="70%" stopColor="#94a3b8" />
-            <stop offset="100%" stopColor="#475569" />
-          </linearGradient>
-
-          {/* Stealth Carbon Gunmetal Chassis Gradient */}
-          <linearGradient id="hoopoeCarbon" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#334155" />
-            <stop offset="50%" stopColor="#1e293b" />
-            <stop offset="85%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
-
-          {/* High-Tech Optic Scanner Glow */}
-          <radialGradient id="scannerCoreGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="45%" stopColor={scannerColor} stopOpacity="0.9" />
-            <stop offset="85%" stopColor={scannerColor} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={scannerColor} stopOpacity="0" />
+          {/* Radial Gradient for Inner Pulsing AI Orb */}
+          <radialGradient id="aiCoreGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+            <stop offset="35%" stopColor={theme.accent} stopOpacity="0.85" />
+            <stop offset="70%" stopColor={theme.primary} stopOpacity="0.45" />
+            <stop offset="100%" stopColor={theme.secondary} stopOpacity="0.05" />
           </radialGradient>
 
-          {/* Ion Repulsor Thruster Plume */}
-          <radialGradient id="ionRepulsorGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="35%" stopColor={thrusterColor} stopOpacity="0.85" />
-            <stop offset="75%" stopColor={thrusterColor} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={thrusterColor} stopOpacity="0" />
+          {/* Ambient Glow Gradient */}
+          <radialGradient id="ambientAura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={theme.primary} stopOpacity={isActive ? '0.5' : '0.25'} />
+            <stop offset="100%" stopColor={theme.primary} stopOpacity="0" />
           </radialGradient>
         </defs>
 
-        {/* 1. Underslung Ion Micro-Thruster Exhaust Plumes */}
-        <g className="origin-[90px_130px]">
-          {/* Left Thruster Jet */}
-          <ellipse cx="68" cy="144" rx="8" ry="14" fill="url(#ionRepulsorGlow)" className="animate-pulse" />
-          <line x1="68" y1="138" x2="68" y2="156" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
-          
-          {/* Right Thruster Jet */}
-          <ellipse cx="112" cy="144" rx="8" ry="14" fill="url(#ionRepulsorGlow)" className="animate-pulse" />
-          <line x1="112" y1="138" x2="112" y2="156" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
-        </g>
+        {/* 1. Ambient Background Halo */}
+        <circle cx="70" cy="70" r="62" fill="url(#ambientAura)" />
 
-        {/* 2. Hoopoe Variable-Geometry Swept Delta Wings (Left Wing) */}
+        {/* 2. Outer HUD Precision Reticle Brackets (Clockwise slow spin) */}
         <g
-          className="origin-[75px_85px] transition-transform duration-300"
-          transform={isFlapping ? 'rotate(-9 75 85)' : 'rotate(0)'}
+          className="transition-transform duration-700"
+          style={{
+            transformOrigin: '70px 70px',
+            animation: isActive ? 'spin 5s linear infinite' : 'spin 18s linear infinite',
+          }}
         >
-          {/* Primary Swept Titanium Blade Feather */}
-          <path
-            d="M 75 75 L 22 28 C 16 38 28 64 48 86 L 68 95 Z"
-            fill="url(#hoopoeTitaniumBlade)"
-            stroke="#64748b"
-            strokeWidth="1.2"
+          {/* 4 Corner Arc Reticles */}
+          <circle
+            cx="70"
+            cy="70"
+            r="56"
+            stroke={theme.primary}
+            strokeWidth="1.5"
+            strokeDasharray="16 28"
+            strokeOpacity="0.7"
+            strokeLinecap="round"
           />
-
-          {/* Secondary Forward Crimson Armor Cowling */}
-          <path
-            d="M 72 70 L 16 32 C 14 36 18 48 28 58 L 74 88 Z"
-            fill="url(#hoopoeCrimson)"
-            stroke="#991b1b"
-            strokeWidth="1.2"
-          />
-
-          {/* Tertiary Lower Kinetic Flap */}
-          <path
-            d="M 72 92 L 40 84 C 36 94 48 106 60 110 L 74 98 Z"
-            fill="url(#hoopoeCrimsonDark)"
-            stroke="#475569"
-            strokeWidth="1"
-          />
-
-          {/* Wing Armor Panel Seams & Rivets */}
-          <line x1="60" y1="65" x2="35" y2="48" stroke="#fecaca" strokeWidth="1" opacity="0.7" />
-          <circle cx="28" cy="42" r="1.5" fill={scannerColor} opacity="0.9" />
-          <circle cx="17" cy="34" r="1.8" fill="#ffffff" />
+          {/* Precision Sensor Nodes on Orbit */}
+          <circle cx="70" cy="14" r="2.2" fill={theme.accent} />
+          <circle cx="126" cy="70" r="2.2" fill={theme.accent} />
+          <circle cx="70" cy="126" r="2.2" fill={theme.accent} />
+          <circle cx="14" cy="70" r="2.2" fill={theme.accent} />
         </g>
 
-        {/* 3. Hoopoe Variable-Geometry Swept Delta Wings (Right Wing) */}
+        {/* 3. Middle Counter-Rotating Telemetry Ring (Counter-Clockwise) */}
         <g
-          className="origin-[105px_85px] transition-transform duration-300"
-          transform={isFlapping ? 'rotate(9 105 85)' : 'rotate(0)'}
+          style={{
+            transformOrigin: '70px 70px',
+            animation: isActive ? 'spin 4s linear infinite reverse' : 'spin 14s linear infinite reverse',
+          }}
         >
-          {/* Primary Swept Titanium Blade Feather */}
-          <path
-            d="M 105 75 L 158 28 C 164 38 152 64 132 86 L 112 95 Z"
-            fill="url(#hoopoeTitaniumBlade)"
-            stroke="#64748b"
+          <circle
+            cx="70"
+            cy="70"
+            r="44"
+            stroke={theme.secondary}
             strokeWidth="1.2"
+            strokeDasharray="4 8"
+            strokeOpacity="0.55"
           />
-
-          {/* Secondary Forward Crimson Armor Cowling */}
-          <path
-            d="M 108 70 L 164 32 C 166 36 162 48 152 58 L 106 88 Z"
-            fill="url(#hoopoeCrimson)"
-            stroke="#991b1b"
-            strokeWidth="1.2"
-          />
-
-          {/* Tertiary Lower Kinetic Flap */}
-          <path
-            d="M 108 92 L 140 84 C 144 94 132 106 120 110 L 106 98 Z"
-            fill="url(#hoopoeCrimsonDark)"
-            stroke="#475569"
-            strokeWidth="1"
-          />
-
-          {/* Wing Armor Panel Seams & Rivets */}
-          <line x1="120" y1="65" x2="145" y2="48" stroke="#fecaca" strokeWidth="1" opacity="0.7" />
-          <circle cx="152" cy="42" r="1.5" fill={scannerColor} opacity="0.9" />
-          <circle cx="163" cy="34" r="1.8" fill="#ffffff" />
+          <circle cx="95" cy="45" r="1.8" fill="#ffffff" />
+          <circle cx="45" cy="95" r="1.8" fill="#ffffff" />
         </g>
 
-        {/* 4. Aerodynamic Tail & Anti-Torque Fin Assembly */}
-        <g>
-          {/* Central Stealth Fin */}
-          <polygon
-            points="90,105 82,142 90,150 98,142"
-            fill="url(#hoopoeCarbon)"
-            stroke="#475569"
-            strokeWidth="1.5"
+        {/* 4. Dynamic Audio / AI Pulse Waves (Expands when talking or active) */}
+        {isActive && (
+          <circle
+            cx="70"
+            cy="70"
+            r="38"
+            stroke={theme.accent}
+            strokeWidth="1.8"
+            strokeOpacity="0.8"
+            fill="none"
+            className="animate-ping"
+            style={{ transformOrigin: '70px 70px', animationDuration: '1.4s' }}
           />
-          {/* Left Carbon Stabilizer */}
-          <polygon
-            points="82,118 64,136 78,136"
-            fill="url(#hoopoeCrimsonDark)"
-            stroke="#334155"
-            strokeWidth="1"
+        )}
+
+        {/* 5. Inner Concentric Geometric Brackets (Breathing scale) */}
+        <g
+          className="transition-transform duration-300"
+          style={{
+            transformOrigin: '70px 70px',
+            animation: isActive ? 'pulse 1.1s ease-in-out infinite' : 'pulse 2.8s ease-in-out infinite',
+          }}
+        >
+          <circle
+            cx="70"
+            cy="70"
+            r="32"
+            stroke={theme.primary}
+            strokeWidth="2"
+            strokeDasharray="24 10"
+            strokeOpacity="0.85"
+            strokeLinecap="round"
           />
-          {/* Right Carbon Stabilizer */}
-          <polygon
-            points="98,118 116,136 102,136"
-            fill="url(#hoopoeCrimsonDark)"
-            stroke="#334155"
-            strokeWidth="1"
-          />
-          {/* Tail Keel Heat Dissipation Vents */}
-          <line x1="86" y1="130" x2="94" y2="130" stroke="#64748b" strokeWidth="1" />
-          <line x1="88" y1="136" x2="92" y2="136" stroke="#64748b" strokeWidth="1" />
         </g>
 
-        {/* 5. Underslung Thruster Pod Casings */}
-        <g>
-          {/* Left Thruster Nozzle */}
-          <rect x="63" y="132" width="10" height="7" rx="3" fill="#0f172a" stroke="#475569" strokeWidth="1" />
-          <line x1="64" y1="135" x2="72" y2="135" stroke={scannerColor} strokeWidth="1" />
-          {/* Right Thruster Nozzle */}
-          <rect x="107" y="132" width="10" height="7" rx="3" fill="#0f172a" stroke="#475569" strokeWidth="1" />
-          <line x1="108" y1="135" x2="116" y2="135" stroke={scannerColor} strokeWidth="1" />
-        </g>
+        {/* 6. Central Holographic Core Orb */}
+        <circle
+          cx="70"
+          cy="70"
+          r={isActive ? '25' : '22'}
+          fill="url(#aiCoreGradient)"
+          className="transition-all duration-300"
+        />
 
-        {/* 6. Hoopoe Central Avionic Fuselage & Stealth Cockpit */}
-        <g>
-          {/* Main Diamond Armor Shell */}
-          <path
-            d="M 90 44 L 112 68 L 108 106 L 90 122 L 72 106 L 68 68 Z"
-            fill="url(#hoopoeCrimson)"
-            stroke="#7f1d1d"
-            strokeWidth="1.5"
+        {/* 7. Central AI Neural Eye / Waveform Iris */}
+        <g style={{ transformOrigin: '70px 70px' }}>
+          {/* Inner Core Bright Dot */}
+          <circle cx="70" cy="70" r={isActive ? '8' : '6'} fill="#ffffff" />
+
+          {/* Futuristic Audio Waveform Bars (Vertical Equilateral Nodes) */}
+          <rect
+            x="58"
+            y={isActive ? '64' : '66'}
+            width="2.5"
+            height={isActive ? '12' : '8'}
+            rx="1.2"
+            fill={theme.primary}
           />
-
-          {/* Carbon Fiber Inlay Spine */}
-          <path
-            d="M 90 48 L 102 68 L 98 100 L 90 110 L 82 100 L 78 68 Z"
-            fill="url(#hoopoeCarbon)"
-            stroke="#334155"
-            strokeWidth="1"
+          <rect
+            x="64"
+            y={isActive ? '60' : '63'}
+            width="2.5"
+            height={isActive ? '20' : '14'}
+            rx="1.2"
+            fill="#ffffff"
           />
-
-          {/* Forward Recon Probe / Titanium Stinger Beak */}
-          <polygon
-            points="90,32 94,48 86,48"
-            fill="url(#hoopoeTitaniumBlade)"
-            stroke="#475569"
-            strokeWidth="1"
+          <rect
+            x="70"
+            y={isActive ? '58' : '61'}
+            width="2.5"
+            height={isActive ? '24' : '18'}
+            rx="1.2"
+            fill={theme.accent}
           />
-          <line x1="90" y1="33" x2="90" y2="46" stroke="#ffffff" strokeWidth="1" />
-
-          {/* Technical Marking */}
-          <text
-            x="90"
-            y="96"
-            textAnchor="middle"
-            fill="#cbd5e1"
-            fontSize="6"
-            fontWeight="bold"
-            letterSpacing="0.8"
-            fontFamily="monospace"
-            opacity="0.8"
-          >
-            AI-HUD
-          </text>
-        </g>
-
-        {/* 7. Hoopoe Cyclopean Optical HUD Scanner Pod (Eye) */}
-        <g>
-          {/* Optical Pod Housing */}
           <rect
             x="76"
-            y="58"
-            width="28"
-            height="16"
-            rx="8"
-            fill="#090d16"
-            stroke="#475569"
-            strokeWidth="1.5"
+            y={isActive ? '60' : '63'}
+            width="2.5"
+            height={isActive ? '20' : '14'}
+            rx="1.2"
+            fill="#ffffff"
           />
-
-          {/* Scanner Lens Recess */}
           <rect
-            x="79"
-            y="61"
-            width="22"
-            height="10"
-            rx="5"
-            fill={scannerColor}
-            opacity="0.3"
+            x="82"
+            y={isActive ? '64' : '66'}
+            width="2.5"
+            height={isActive ? '12' : '8'}
+            rx="1.2"
+            fill={theme.primary}
           />
-
-          {/* Glowing Optical Core */}
-          <circle cx="90" cy="66" r="6" fill="url(#scannerCoreGlow)" />
-          <circle cx="90" cy="66" r="2.5" fill="#ffffff" />
-
-          {/* Tactical Targeting Crosshairs Brackets [ + ] */}
-          <line x1="84" y1="66" x2="87" y2="66" stroke="#ffffff" strokeWidth="1" opacity="0.9" />
-          <line x1="93" y1="66" x2="96" y2="66" stroke="#ffffff" strokeWidth="1" opacity="0.9" />
-          <line x1="90" y1="62" x2="90" y2="64" stroke="#ffffff" strokeWidth="1" opacity="0.9" />
-          <line x1="90" y1="68" x2="90" y2="70" stroke="#ffffff" strokeWidth="1" opacity="0.9" />
-
-          {/* Optical Laser Sweeper Line */}
-          <line
-            x1="81"
-            y1="66"
-            x2="99"
-            y2="66"
-            stroke={scannerColor}
-            strokeWidth="1"
-            strokeDasharray="2, 2"
-            opacity="0.8"
-          />
-
-          {/* Micro Telemetry Indicator Lights */}
-          <circle cx="81" cy="61" r="1" fill={scannerColor} />
-          <circle cx="99" cy="61" r="1" fill={scannerColor} />
         </g>
-
-        {/* 8. Tactical Alert Overlays */}
-        {mood === 'alert_speed' && (
-          <g transform="translate(114, 46)" className="animate-bounce">
-            <polygon points="0,0 16,0 8,-14" fill="#ef4444" stroke="#ffffff" strokeWidth="1.2" />
-            <text x="8" y="-3" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="bold">!</text>
-          </g>
-        )}
-
-        {mood === 'alert_rain' && (
-          <g transform="translate(114, 46)" className="animate-pulse">
-            <circle cx="7" cy="-7" r="7" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.2" />
-            <path d="M 7 -12 L 4 -7 L 10 -7 Z" fill="#ffffff" />
-          </g>
-        )}
-
-        {mood === 'alert_prayer' && (
-          <g transform="translate(114, 46)">
-            <circle cx="7" cy="-7" r="7" fill="#059669" stroke="#34d399" strokeWidth="1.2" />
-            {/* Crescent moon */}
-            <circle cx="7.8" cy="-7.5" r="4.2" fill="#ffffff" />
-            <circle cx="9.2" cy="-8" r="3.6" fill="#059669" />
-          </g>
-        )}
       </svg>
     </div>
   );

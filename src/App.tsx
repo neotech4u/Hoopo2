@@ -258,8 +258,8 @@ export default function App() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // 3. Navigation & Map State
-  const [activeRoute, setActiveRoute] = useState<RouteOption>(SAMPLE_ROUTES[0]);
+  // 3. Navigation & Map State (Starts clean in Free Drive mode without pre-drawn demo highway)
+  const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null);
   const [progressKm, setProgressKm] = useState(0);
   const [nightMode, setNightMode] = useState(true);
   const [showTraffic, setShowTraffic] = useState(true);
@@ -1029,7 +1029,7 @@ export default function App() {
       <RouteSuggestionsModal
         isOpen={showRouteModal}
         routes={SAMPLE_ROUTES}
-        activeRouteId={activeRoute.id}
+        activeRouteId={activeRoute?.id || ''}
         onClose={() => setShowRouteModal(false)}
         onSelectRoute={(newRoute) => {
           setActiveRoute(newRoute);

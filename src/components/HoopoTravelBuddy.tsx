@@ -92,7 +92,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
   const [lastPrayerAlertTime, setLastPrayerAlertTime] = useState(0);
   const [lastCO2AlertTime, setLastCO2AlertTime] = useState(0);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [lastSpontaneousSpokeTime, setLastSpontaneousSpokeTime] = useState(() => Date.now());
+  const [lastSpontaneousSpokeTime, setLastSpontaneousSpokeTime] = useState(() => Date.now() - 190000);
   const nextSpontaneousGapMsRef = useRef<number>(225000 + Math.floor(Math.random() * 110000));
   const [userReplyInput, setUserReplyInput] = useState('');
   const [isListeningMic, setIsListeningMic] = useState(false);
@@ -437,14 +437,14 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
         </button>
       </div>
 
-      {/* Tiny Animated Hoopoe Drone & Interactive Speech Bubble */}
+      {/* Futuristic Animated Hoopoe AI Nexus & Interactive Speech Bubble */}
       <div className="flex items-center gap-2.5 my-2 p-2.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 rounded-xl border border-emerald-900/40 hover:border-emerald-500/40 transition-colors">
         <button
           type="button"
           onClick={() => triggerCasualCompanionBanter('spontaneous', true)}
           className="shrink-0 group focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-xl p-1 relative cursor-pointer"
-          title={`Tap Hoopoe AI to chat casually with ${userName}`}
-          aria-label="Tap Hoopoe AI companion drone for casual banter"
+          title={`Tap Hoopoe AI core to chat casually with ${userName}`}
+          aria-label="Tap Hoopoe AI companion core for casual conversation"
         >
           <HoopoMascot
             size="md"
@@ -452,14 +452,14 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
             isFlapping={isFlapping}
             className="group-hover:scale-110 transition-transform"
           />
-          <div className="absolute -bottom-1 -right-1 bg-emerald-600 text-white text-[8px] font-bold px-1 rounded-full uppercase shadow">
-            TAP
+          <div className="absolute -bottom-1 -right-1 bg-cyan-600 text-white text-[8px] font-bold px-1 rounded-full uppercase shadow">
+            TALK
           </div>
         </button>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-emerald-400">Hoopoe AI</span>
+            <span className="text-[11px] font-bold text-cyan-400">Hoopoe AI</span>
             {mood === 'alert_speed' && currentSpeed > speedLimit && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
                 Slow Down!
@@ -486,7 +486,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
               ? 'Hoopoe AI is analyzing road conditions...'
               : activeAlert
               ? activeAlert.message
-              : `Cruising along with you, ${userName}! Tap my wings anytime for casual road thoughts, or I'll drop notes when something comes up.`}
+              : `Cruising along with you, ${userName}! Tap my AI core anytime for road thoughts, or I'll share companion updates as we drive.`}
           </p>
         </div>
       </div>
