@@ -111,7 +111,7 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-center">
             <span className="text-[10px] text-slate-400 uppercase font-semibold">Total Spent</span>
             <div className="text-base sm:text-lg font-speed font-extrabold text-amber-400 mt-0.5">
-              ${summary.totalSpent.toFixed(2)}
+              ₹{summary.totalSpent.toFixed(2)}
             </div>
           </div>
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-center">
@@ -123,7 +123,7 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
           <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-center">
             <span className="text-[10px] text-slate-400 uppercase font-semibold">Avg Price</span>
             <div className="text-base sm:text-lg font-speed font-extrabold text-sky-400 mt-0.5">
-              ${summary.avgPricePerLiter.toFixed(2)}/L
+              ₹{summary.avgPricePerLiter.toFixed(2)}/L
             </div>
           </div>
         </div>
@@ -137,7 +137,7 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
             </span>
             {calculatedUnitPrice && (
               <span className="text-xs font-semibold text-emerald-400">
-                Rate: ${calculatedUnitPrice} / Liter
+                Rate: ₹{calculatedUnitPrice} / Liter
               </span>
             )}
           </div>
@@ -157,11 +157,11 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Amount ($) *</label>
+              <label className="block text-[11px] text-slate-400 mb-1">Amount (₹) *</label>
               <input
                 type="number"
                 step="0.01"
-                placeholder="e.g. 52.00"
+                placeholder="e.g. 4200.00"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -173,7 +173,7 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
               <label className="block text-[11px] text-slate-400 mb-1">Station Name</label>
               <input
                 type="text"
-                placeholder="e.g. Shell Express"
+                placeholder="e.g. BPCL Gangaikondan"
                 value={stationName}
                 onChange={(e) => setStationName(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
@@ -226,10 +226,10 @@ export const PetrolExpenseModal: React.FC<PetrolExpenseModalProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white text-sm">
-                        ${log.amount.toFixed(2)}
+                        ₹{log.amount.toFixed(2)}
                       </span>
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">
-                        {log.liters.toFixed(1)} L (${unitPrice}/L)
+                        {log.liters.toFixed(1)} L (₹{unitPrice}/L)
                       </span>
                       <span className="text-slate-400">{log.stationName}</span>
                     </div>

@@ -657,7 +657,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
           <div style="background: #0f172a; border: 2px solid #f59e0b; border-radius: 8px; padding: 3px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 4px; color: white; font-size: 10px; font-weight: bold; cursor: pointer;">
             <span style="color: #f59e0b;">⛽</span>
             <span>${station.brand}</span>
-            <span style="background: #f59e0b; color: #0f172a; padding: 1px 3px; border-radius: 3px; font-size: 9px;">$${station.fuelPrice.toFixed(2)}</span>
+            <span style="background: #f59e0b; color: #0f172a; padding: 1px 3px; border-radius: 3px; font-size: 9px;">₹${station.fuelPrice.toFixed(2)}</span>
           </div>
         `,
         iconSize: [85, 26],
@@ -797,90 +797,74 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       aria-label="Interactive Navigation Map with Embedded Search and Directions"
     >
       {/* 1. Turn-by-Turn Navigation HUD Bar (Top of Map) */}
-      <div className="absolute top-2 inset-x-2 z-30 flex items-center justify-between gap-2 bg-slate-900/90 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-2.5 shadow-2xl">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
-            <Navigation className="w-5 h-5 transform -rotate-45" />
+      {/* 1. Google Maps Automotive Styled Search & Navigation Header Bar */}
+      <div className="absolute top-2 inset-x-2 z-30 flex items-center gap-2">
+        {/* Turn-by-Turn Instruction Capsule (Left) */}
+        <div className="flex items-center gap-2 bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 px-2.5 shadow-2xl shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
+            <Navigation className="w-4 h-4 transform -rotate-45" />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="font-speed text-base sm:text-lg font-bold text-white tracking-wide">
-                {currentNav.distance}
-              </span>
-              <span className="text-[10px] font-semibold uppercase px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                Turn Next
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-slate-200 truncate max-w-[180px] sm:max-w-xs md:max-w-sm">
+          <div className="hidden md:block">
+            <span className="font-speed text-sm font-bold text-white block leading-none">
+              {currentNav.distance}
+            </span>
+            <span className="text-[10px] text-slate-300 truncate max-w-[120px] block">
               {currentNav.text}
-            </p>
+            </span>
           </div>
         </div>
 
-        {/* Search & Directions Trigger Buttons */}
-        <div className="flex items-center gap-1.5">
+        {/* ALWAYS-VISIBLE SEARCH BAR FOR DIRECTIONS & LOCATIONS */}
+        <div className="flex-1 relative flex items-center bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 focus-within:border-blue-500 rounded-2xl px-3 py-1.5 shadow-2xl transition-all">
+          <Search className="w-4 h-4 text-amber-400 mr-2 shrink-0" />
+          <input
+            type="text"
+            placeholder="Directions to / Search location (e.g. Madurai, Kanyakumari, Courtallam)..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (!isSearchOpen) setIsSearchOpen(true);
+            }}
+            onFocus={() => setIsSearchOpen(true)}
+            className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none min-w-0"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="p-1 text-slate-400 hover:text-white mr-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
               setIsDirectionsModalOpen(true);
               setIsSearchOpen(false);
             }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 border border-blue-400/40 text-xs font-bold text-white transition-all shadow-md shadow-blue-900/30 active:scale-95"
-            aria-label="Directions To"
+            className="ml-1.5 flex items-center gap-1 px-3 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shrink-0 transition-all shadow-md shadow-blue-900/40 active:scale-95"
+            title="Open Directions & Corridor Route Planner"
           >
             <Navigation className="w-3.5 h-3.5 text-white" />
-            <span>Directions To</span>
+            <span>Directions</span>
           </button>
+        </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsSearchOpen(!isSearchOpen);
-              setIsDirectionsModalOpen(false);
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors shadow-sm"
-            aria-label="Search map destinations"
-          >
-            <Search className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Search</span>
-          </button>
-
-          {/* ETA & Distance Summary */}
-          <div className="text-right pl-1 border-l border-slate-800">
-            <div className="text-xs sm:text-sm font-bold text-emerald-400 font-speed leading-none">
-              {Math.max(1, Math.round((activeRoute.distanceKm - progressKm) * 1.2))} MIN
-            </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
-              {Math.max(0, activeRoute.distanceKm - progressKm).toFixed(1)} km left
-            </div>
+        {/* ETA & Distance Summary (Right) */}
+        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/80 rounded-2xl p-1.5 px-3 shadow-2xl shrink-0 text-right">
+          <div className="text-xs sm:text-sm font-bold text-emerald-400 font-speed leading-none">
+            {Math.max(1, Math.round((activeRoute.distanceKm - progressKm) * 1.2))} MIN
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5">
+            {Math.max(0, activeRoute.distanceKm - progressKm).toFixed(1)} km left
           </div>
         </div>
       </div>
 
-      {/* 2. Embedded Search Input & Dropdown Popup */}
+      {/* 2. Embedded Search Autocomplete Dropdown Popup */}
       {isSearchOpen && (
-        <div className="absolute top-16 inset-x-2 z-40 bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl p-3 shadow-2xl animate-in fade-in max-w-lg mx-auto">
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 text-amber-400 absolute left-3 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search place, mosque, airport, or landmark..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 pl-9 pr-8 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
-              autoFocus
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 p-1 text-slate-400 hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
+        <div className="absolute top-14 inset-x-2 z-40 bg-slate-900/98 backdrop-blur-2xl border border-slate-700 rounded-2xl p-3 shadow-2xl animate-in fade-in max-w-lg mx-auto">
           {/* Live Search Status */}
           {isSearchingLive && (
             <div className="flex items-center gap-1.5 py-1.5 px-2 text-[11px] text-amber-300 font-medium border-b border-slate-800/80">

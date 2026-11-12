@@ -127,7 +127,7 @@ export const FuelStationLocator: React.FC<FuelStationLocatorProps> = ({
                       {station.distanceKm} km along route
                     </span>
                     <span className="font-bold text-emerald-400">
-                      ${station.fuelPrice.toFixed(2)} / L
+                      ₹{station.fuelPrice.toFixed(2)} / L
                     </span>
                   </div>
 

@@ -73,11 +73,11 @@ import {
 } from './utils/companionLogic';
 import { soundEngine, speakHoopoMessage } from './utils/audioSynthesizer';
 
-// Realistic sample route coordinates across Tirunelveli & South Tamil Nadu highways
+// Realistic route coordinates across Tirunelveli & South Tamil Nadu highways
 const SAMPLE_ROUTES: RouteOption[] = [
   {
-    id: 'route-fast',
-    name: 'Madurai - Tirunelveli - Kanyakumari Express (NH 44)',
+    id: 'route-madurai',
+    name: 'Tirunelveli to Madurai (NH 44 North Expressway)',
     tag: 'Fastest',
     distanceKm: 160,
     durationMins: 125,
@@ -85,7 +85,7 @@ const SAMPLE_ROUTES: RouteOption[] = [
     rainRisk: true,
     fuelStopsCount: 4,
     waypoints: [
-      [8.7139, 77.7567], // Tirunelveli Junction
+      [8.7139, 77.7567], // Tirunelveli Central
       [8.8550, 77.7820], // Gangaikondan Industrial Hub
       [8.9500, 77.7700], // Kayathar Toll Plaza
       [9.1700, 77.8700], // Kovilpatti Bypass
@@ -95,8 +95,25 @@ const SAMPLE_ROUTES: RouteOption[] = [
     ],
   },
   {
-    id: 'route-coastal',
-    name: 'Tirunelveli - Tenkasi - Courtallam Highway (SH 39)',
+    id: 'route-kanyakumari',
+    name: 'Tirunelveli to Kanyakumari (NH 44 South Highway)',
+    tag: 'Scenic',
+    distanceKm: 85,
+    durationMins: 75,
+    trafficLevel: 'smooth',
+    rainRisk: false,
+    fuelStopsCount: 3,
+    waypoints: [
+      [8.7139, 77.7567], // Tirunelveli Central
+      [8.4900, 77.6600], // Nanguneri Toll
+      [8.3300, 77.6000], // Valliyur Bypass
+      [8.2200, 77.5600], // Panagudi Corridor
+      [8.0883, 77.5385], // Kanyakumari Cape Comorin
+    ],
+  },
+  {
+    id: 'route-courtallam',
+    name: 'Tirunelveli to Courtallam & Tenkasi (SH 39)',
     tag: 'Scenic',
     distanceKm: 58,
     durationMins: 65,
@@ -111,8 +128,8 @@ const SAMPLE_ROUTES: RouteOption[] = [
     ],
   },
   {
-    id: 'route-eco',
-    name: 'Tirunelveli - Thoothukudi Port Expressway (NH 138)',
+    id: 'route-thoothukudi',
+    name: 'Tirunelveli to Thoothukudi Port (NH 138)',
     tag: 'Eco-Friendly',
     distanceKm: 48,
     durationMins: 45,
@@ -339,21 +356,21 @@ export default function App() {
     return [
       {
         id: 'p-1',
-        liters: 42.5,
-        amount: 55.25,
-        stationName: 'Aramco Oasis Plaza',
+        liters: 35.0,
+        amount: 3549.0,
+        stationName: 'BPCL Highway Lounge - Tirunelveli Bypass (NH 44)',
         odometerKm: 14120,
-        timestamp: 'Nov 8, 09:20 AM',
+        timestamp: 'Nov 11, 09:20 AM',
         notes: 'Full tank refill',
       },
       {
         id: 'p-2',
-        liters: 38.0,
-        amount: 50.92,
-        stationName: 'Shell Select Express',
-        odometerKm: 14250,
-        timestamp: 'Nov 10, 01:15 PM',
-        notes: 'Highway fuel stop',
+        liters: 25.0,
+        amount: 2530.0,
+        stationName: 'HPCL Swagat Plaza - Gangaikondan',
+        odometerKm: 14380,
+        timestamp: 'Nov 12, 02:15 PM',
+        notes: 'Highway fuel top-up',
       },
     ];
   });
@@ -622,7 +639,7 @@ export default function App() {
     setPetrolLogs((prev) => [entry, ...prev]);
     setFuelLevel(95);
     if (voiceEnabled) {
-      speakHoopoMessage(`${userName}, logged ${entry.liters} liters for $${entry.amount}. Fuel tank updated.`);
+      speakHoopoMessage(`${userName}, logged ${entry.liters} liters for ₹${entry.amount} rupees. Fuel tank updated.`);
     }
   };
 
