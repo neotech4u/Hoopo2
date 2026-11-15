@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Fuel, X, Plus, Calendar, DollarSign, Gauge, Trash2, CheckCircle2 } from 'lucide-react';
+import { Fuel, X, Plus, Calendar, Gauge, Trash2, CheckCircle2 } from 'lucide-react';
 import { PetrolLog, calculatePetrolSummary } from '../utils/companionLogic';
 
 interface PetrolExpenseModalProps {

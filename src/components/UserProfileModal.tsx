@@ -14,8 +14,6 @@ import {
   Shield,
   Leaf,
   AlertTriangle,
-  Phone,
-  ShieldAlert,
 } from 'lucide-react';
 import {
   VoiceSettings,

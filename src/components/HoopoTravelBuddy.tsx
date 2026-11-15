@@ -360,7 +360,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     setActiveAlert({
       id: `dialogue-${Date.now()}`,
       type: 'companion',
-      title: `Hoopoe AI &bull; ${userName}`,
+      title: `Hoopoe AI • ${userName}`,
       message: companionResponse,
       actionText: 'Got It!',
       onAction: () => setActiveAlert(null),
@@ -454,7 +454,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     setActiveAlert({
       id: `chat-${Date.now()}`,
       type: 'companion',
-      title: `Hoopoe AI &bull; ${userName}`,
+      title: `Hoopoe AI • ${userName}`,
       message: companionText,
       actionText: 'Got It!',
       onAction: () => setActiveAlert(null),

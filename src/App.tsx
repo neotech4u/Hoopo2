@@ -302,6 +302,14 @@ export default function App() {
   const [tripStartTime, setTripStartTime] = useState<Date>(new Date());
   const [tripMaxSpeed, setTripMaxSpeed] = useState(0);
   const [latestRating, setLatestRating] = useState<DrivingRating | null>(null);
+  const [finishedTripStats, setFinishedTripStats] = useState<{
+    distance: number;
+    duration: number;
+    maxSpeed: number;
+    avgSpeed: number;
+    idleSeconds: number;
+    totalCO2: number;
+  } | null>(null);
 
   // 7. Idle Seconds Counter (Increments when ignition ON and speed === 0)
   const [idleSeconds, setIdleSeconds] = useState(0);
@@ -555,6 +563,7 @@ export default function App() {
     const finalDistance = Math.round(tripDistance * 10) / 10;
     const finalDuration = elapsedSecs;
     const finalMaxSpeed = Math.round(tripMaxSpeed);
+    const finalIdleSeconds = idleSeconds;
 
     // If trip was too brief to compute telematics (< 0.2 km and < 30s), avoid fabricating ratings
     if (finalDistance < 0.2 && finalDuration < 30) {
@@ -572,11 +581,10 @@ export default function App() {
       finalDuration,
       finalMaxSpeed,
       speedLimit,
-      idleSeconds,
+      finalIdleSeconds,
       userName
     );
     setLatestRating(rating);
-    setShowRatingModal(true);
 
     const newTrip = createCompletedTrip(
       tripStartTime,
@@ -585,6 +593,17 @@ export default function App() {
       finalMaxSpeed
     );
     setTripLogs((prev) => [newTrip, ...prev]);
+
+    setFinishedTripStats({
+      distance: finalDistance,
+      duration: finalDuration,
+      maxSpeed: finalMaxSpeed,
+      avgSpeed: newTrip.avgSpeedKmH,
+      idleSeconds: finalIdleSeconds,
+      totalCO2: newTrip.estimatedCO2Grams,
+    });
+
+    setShowRatingModal(true);
 
     setIgnitionOn(false);
     setCalculatedGpsSpeed(0);
@@ -1058,23 +1077,25 @@ export default function App() {
       />
 
       {/* Driving Performance Rating Modal (Triggered after finished ride) */}
-      {latestRating && (
+      {latestRating && finishedTripStats && (
         <DrivingRatingModal
           isOpen={showRatingModal}
           rating={latestRating}
-          tripDistance={Math.round(tripDistance * 10) / 10}
-          tripDurationSeconds={tripSeconds}
-          maxSpeedKmH={Math.round(tripMaxSpeed)}
-          avgSpeedKmH={Math.round(tripSeconds > 0 ? (tripDistance / (tripSeconds / 3600)) : 0)}
-          totalCO2Grams={calculateStandardDrivingCO2(tripDistance, currentSpeed || 50).gramsCO2}
-          idleSeconds={idleSeconds}
+          tripDistance={finishedTripStats.distance}
+          tripDurationSeconds={finishedTripStats.duration}
+          maxSpeedKmH={finishedTripStats.maxSpeed}
+          avgSpeedKmH={finishedTripStats.avgSpeed}
+          totalCO2Grams={finishedTripStats.totalCO2}
+          idleSeconds={finishedTripStats.idleSeconds}
           onClose={() => setShowRatingModal(false)}
           onStartNewRide={() => {
             setShowRatingModal(false);
+            setFinishedTripStats(null);
             setIgnitionOn(true);
             setTripStartTime(new Date());
             setTripDistance(0);
             setTripSeconds(0);
+            setTripMaxSpeed(0);
             setIdleSeconds(0);
           }}
         />

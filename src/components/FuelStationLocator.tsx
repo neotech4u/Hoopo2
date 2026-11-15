@@ -20,12 +20,31 @@ export const FuelStationLocator: React.FC<FuelStationLocatorProps> = ({
   const [filterBrand, setFilterBrand] = useState<string>('all');
   const [filterAmenity, setFilterAmenity] = useState<string>('all');
 
+  const availableBrands = React.useMemo(() => {
+    const brands = Array.from(new Set(stations.map((s) => s.brand)));
+    return ['all', ...brands];
+  }, [stations]);
+
+  const availableAmenities = ['all', 'Prayer / Musalla', 'EV Charger', 'Cafe / Food', 'Car Wash'];
+
   if (!isOpen) return null;
 
   const filteredStations = stations.filter((s) => {
     if (filterBrand !== 'all' && s.brand !== filterBrand) return false;
-    if (filterAmenity !== 'all' && !s.amenities.some((a) => a.toLowerCase().includes(filterAmenity.toLowerCase()))) {
-      return false;
+    if (filterAmenity !== 'all') {
+      if (filterAmenity === 'Prayer / Musalla') {
+        return s.amenities.some((a) => /prayer|musalla/i.test(a));
+      }
+      if (filterAmenity === 'Cafe / Food') {
+        return s.amenities.some((a) => /cafe|restaurant|snacks|market|deli/i.test(a));
+      }
+      if (filterAmenity === 'EV Charger') {
+        return s.amenities.some((a) => /ev\s*charger|ev\s*fast/i.test(a));
+      }
+      if (filterAmenity === 'Car Wash') {
+        return s.amenities.some((a) => /car\s*wash|car\s*care/i.test(a));
+      }
+      return s.amenities.some((a) => a.toLowerCase().includes(filterAmenity.toLowerCase()));
     }
     return true;
   });
@@ -67,7 +86,7 @@ export const FuelStationLocator: React.FC<FuelStationLocatorProps> = ({
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 py-3 border-b border-slate-800/80">
           <span className="text-xs text-slate-400 font-semibold">Brand:</span>
-          {['all', 'Aramco', 'Shell', 'Petronas', 'Adnoc'].map((brand) => (
+          {availableBrands.map((brand) => (
             <button
               key={brand}
               type="button"
@@ -83,7 +102,7 @@ export const FuelStationLocator: React.FC<FuelStationLocatorProps> = ({
           ))}
 
           <span className="text-xs text-slate-400 font-semibold ml-2">Amenity:</span>
-          {['all', 'Musalla', 'EV Charger', 'Car Wash'].map((amenity) => (
+          {availableAmenities.map((amenity) => (
             <button
               key={amenity}
               type="button"

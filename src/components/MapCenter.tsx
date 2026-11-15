@@ -624,8 +624,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
     if (followCar) {
       map.panTo(realUserLocation, { animate: true, duration: 0.4 });
-    } else {
-      map.flyTo(realUserLocation, 16, { duration: 1.0 });
     }
   }, [realUserLocation, followCar]);
 
@@ -1518,7 +1516,13 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
           <button
             type="button"
-            onClick={() => setFollowCar(!followCar)}
+            onClick={() => {
+              const next = !followCar;
+              setFollowCar(next);
+              if (next && mapInstanceRef.current && realUserLocation) {
+                mapInstanceRef.current.panTo(realUserLocation, { animate: true });
+              }
+            }}
             className={`p-1 rounded-lg border transition-all ${
               followCar
                 ? 'bg-blue-500/20 border-blue-500/60 text-blue-300'
