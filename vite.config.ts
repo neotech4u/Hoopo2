@@ -47,6 +47,19 @@ export default defineConfig(() => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+          // Leaflet requests tiles as ordinary image URLs. CacheStorage entries written by
+          // MapCenter are invisible to those requests unless the service worker serves them.
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/(tile\.openstreetmap\.org|mt1\.google\.com)\//,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'hoopo-offline-maps-v1',
+                cacheableResponse: { statuses: [0, 200] },
+                expiration: { maxEntries: 5000, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              },
+            },
+          ],
         },
         devOptions: {
           enabled: true,
