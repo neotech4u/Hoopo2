@@ -28,7 +28,7 @@
 
 ### 3. 💾 Offline Map Saving & Caching (Experimental)
 - **Browser CacheStorage Engine**: Pre-caches route corridor tiles (OpenStreetMap & Google Maps) locally across zoom levels for areas with weak or absent cellular network coverage.
-- **Offline Storage Manager**: Displays exact number of successfully cached tiles and actual storage space used (MB) with 1-click corridor caching and cache clearing.
+- **Offline Storage Manager**: Displays the unique number of cached tiles and an estimated storage size (opaque tile responses do not expose their exact byte size), with 1-click corridor caching and cache clearing.
 - **Offline Mode Navigation Switch**: Toggle offline mode with a persistent HUD status badge (`OFFLINE MODE (EXPERIMENTAL TILE CACHE)`).
 
 ### 4. 🦅 Hoopoe AI Travel Buddy (Right Column)
