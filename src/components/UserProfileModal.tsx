@@ -25,19 +25,12 @@ import {
   getSystemSpeechVoices,
   speakHoopoMessage,
 } from '../utils/audioSynthesizer';
-import {
-  EmergencyContact,
-  DEFAULT_EMERGENCY_CONTACT,
-  getStoredEmergencyContact,
-  saveStoredEmergencyContact,
-} from '../utils/emergencySos';
 
 interface UserProfileModalProps {
   isOpen: boolean;
   currentUserName: string;
   onClose: () => void;
   onSaveUserName: (newName: string) => void;
-  onTriggerSosTest?: () => void;
 }
 
 const POPULAR_SUGGESTED_NAMES = [
@@ -58,18 +51,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   currentUserName,
   onClose,
   onSaveUserName,
-  onTriggerSosTest,
 }) => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'voice' | 'sos'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'voice'>('profile');
   const [nameInput, setNameInput] = useState(currentUserName);
 
   // Voice Settings State
   const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(getStoredVoiceSettings);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isPlayingTestAudio, setIsPlayingTestAudio] = useState(false);
-
-  // Emergency SOS State
-  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(getStoredEmergencyContact);
 
   // Load available speech synthesis voices
   useEffect(() => {
@@ -99,7 +88,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     const trimmed = nameInput.trim() || 'Friend';
     onSaveUserName(trimmed);
     saveStoredVoiceSettings(voiceSettings);
-    saveStoredEmergencyContact(emergencyContact);
     onClose();
   };
 
@@ -173,19 +161,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           >
             <Volume2 className="w-3.5 h-3.5" />
             <span>Voice &amp; Audio</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('sos')}
-            className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === 'sos'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Crash SOS</span>
           </button>
         </div>
 
@@ -401,122 +376,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <span>Reset</span>
               </button>
             </div>
-          </div>
-        )}
-
-        {/* TAB 3: Emergency Crash SOS & Location SMS */}
-        {activeTab === 'sos' && (
-          <div className="space-y-4 my-2 text-xs">
-            <div className="p-3 rounded-2xl bg-rose-950/30 border border-rose-500/40 flex items-start gap-2.5">
-              <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-white text-xs">Autonomous Crash Detection</h4>
-                <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-                  Monitors accelerometer G-force deceleration. If an extreme collision or rollover impact occurs, a 10-second emergency siren triggers. If not cancelled, an SMS with your exact Google Maps GPS pin is dispatched to your emergency contact.
-                </p>
-              </div>
-            </div>
-
-            {/* Emergency Contact Name */}
-            <div>
-              <label htmlFor="sos-contact-name" className="block text-xs font-semibold text-slate-300 mb-1">
-                Emergency Contact Name
-              </label>
-              <input
-                id="sos-contact-name"
-                type="text"
-                placeholder="e.g. Brother Tariq, Dad, Spouse..."
-                value={emergencyContact.name}
-                onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
-              />
-            </div>
-
-            {/* Emergency Contact Phone */}
-            <div>
-              <label htmlFor="sos-contact-phone" className="block text-xs font-semibold text-slate-300 mb-1">
-                Emergency Phone Number (with Country Code)
-              </label>
-              <input
-                id="sos-contact-phone"
-                type="tel"
-                placeholder="e.g. +91 9876543210"
-                value={emergencyContact.phone}
-                onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-rose-500"
-              />
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                SMS will be addressed to this mobile number with live coordinates.
-              </span>
-            </div>
-
-            {/* Detection Sensitivity */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Impact Detection Sensitivity
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { id: 'medium', label: 'Medium (2.8G)', desc: 'Standard collision' },
-                  { id: 'high', label: 'High (2.2G)', desc: 'Sensitive impact' },
-                  { id: 'low', label: 'Low (3.8G)', desc: 'Severe crash only' },
-                ].map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setEmergencyContact({ ...emergencyContact, sensitivity: s.id as any })}
-                    className={`p-2 rounded-xl border text-center transition-all ${
-                      emergencyContact.sensitivity === s.id
-                        ? 'bg-rose-600/30 border-rose-500 text-rose-300 font-bold'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <div className="text-xs">{s.label}</div>
-                    <div className="text-[9px] text-slate-400 mt-0.5">{s.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Countdown Duration */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Cancel Window Before SMS Dispatch
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[10, 15, 20].map((sec) => (
-                  <button
-                    key={sec}
-                    type="button"
-                    onClick={() => setEmergencyContact({ ...emergencyContact, countdownSeconds: sec })}
-                    className={`py-1.5 rounded-xl border text-center text-xs font-bold transition-all ${
-                      emergencyContact.countdownSeconds === sec
-                        ? 'bg-rose-600/30 border-rose-500 text-rose-300'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {sec} Seconds
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Test Simulation Button */}
-            {onTriggerSosTest && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    saveStoredEmergencyContact(emergencyContact);
-                    onTriggerSosTest();
-                  }}
-                  className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Test Emergency Crash SOS Screen (Safe Simulation)</span>
-                </button>
-              </div>
-            )}
           </div>
         )}
 
