@@ -29,6 +29,7 @@ import {
   formatRainAlert,
   formatIdleCO2Alert,
   formatPrayerAlert,
+  formatStoppedTripLogReminder,
   generateFriendlyCompanionComment,
   generateCompanionDialogueReply,
 } from '../utils/companionLogic';
@@ -61,7 +62,9 @@ interface HoopoTravelBuddyProps {
   onLocateMosque: () => void;
   onToggleVoice: () => void;
   onFinishRide?: () => void;
-  onRequestAIComment?: (category: 'weather' | 'music' | 'break' | 'spontaneous') => Promise<string | void>;
+  onOpenPetrolModal?: () => void;
+  onOpenTripModal?: () => void;
+  onRequestAIComment?: (category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous') => Promise<string | void>;
 }
 
 export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
@@ -82,6 +85,8 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
   onLocateMosque,
   onToggleVoice,
   onFinishRide,
+  onOpenPetrolModal,
+  onOpenTripModal,
   onRequestAIComment,
 }) => {
   const [activeAlert, setActiveAlert] = useState<HoopoNotification | null>(null);
@@ -96,6 +101,14 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
   const nextSpontaneousGapMsRef = useRef<number>(225000 + Math.floor(Math.random() * 110000));
   const [userReplyInput, setUserReplyInput] = useState('');
   const [isListeningMic, setIsListeningMic] = useState(false);
+  const [hasRemindedStopped15s, setHasRemindedStopped15s] = useState(false);
+
+  // Reset stopped reminder flag when vehicle resumes moving
+  useEffect(() => {
+    if (currentSpeed > 5 && hasRemindedStopped15s) {
+      setHasRemindedStopped15s(false);
+    }
+  }, [currentSpeed, hasRemindedStopped15s]);
 
   // 1. Unsafe Speed Monitor with User Name
   useEffect(() => {
@@ -133,6 +146,28 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
       setIsFlapping(false);
     }
   }, [currentSpeed, speedLimit, voiceEnabled, lastSpeedAlertTime, mood, onSlowDown, idleSeconds, userName]);
+
+  // 1.5. 15-Second Stationary Vehicle Trip Log Reminder
+  useEffect(() => {
+    if (ignitionOn && currentSpeed === 0 && idleSeconds >= 15 && idleSeconds < 40 && !hasRemindedStopped15s) {
+      setHasRemindedStopped15s(true);
+      const reminderMsg = formatStoppedTripLogReminder(userName, idleSeconds);
+
+      if (voiceEnabled) {
+        speakHoopoMessage(reminderMsg);
+      }
+
+      setActiveAlert({
+        id: `stopped-15s-${Date.now()}`,
+        type: 'info',
+        title: `Trip Log Reminder • ${userName}`,
+        message: reminderMsg,
+        actionText: 'Log Petrol & Odometer',
+        onAction: onOpenPetrolModal || onOpenTripModal || (() => {}),
+        timestamp: new Date(),
+      });
+    }
+  }, [ignitionOn, currentSpeed, idleSeconds, hasRemindedStopped15s, voiceEnabled, userName, onOpenPetrolModal, onOpenTripModal]);
 
   // 2. Standard Idle CO2 Emission Monitor (> 40s) with User Name
   useEffect(() => {
@@ -233,16 +268,18 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
           // Set next random interval (always > 220 seconds)
           nextSpontaneousGapMsRef.current = 225000 + Math.floor(Math.random() * 110000);
 
-          const categories: Array<'weather' | 'music' | 'break' | 'spontaneous'> = [
+          const categories: Array<'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous'> = [
             'weather',
             'music',
             'break',
+            'smooth_driving',
+            'dhikr',
             'spontaneous',
           ];
           const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
           triggerCasualCompanionBanter(chosenCategory, false);
         }
-      }, 10000);
+      }, 5000);
     }
     return () => clearInterval(spontaneousInterval);
   }, [ignitionOn, voiceEnabled, lastSpontaneousSpokeTime, activeAlert, userName]);
@@ -336,7 +373,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
 
   // Trigger Friendly Companion Talk (Weather, Music, Short Break, or Dhikr) casually
   const triggerCasualCompanionBanter = async (
-    category: 'weather' | 'music' | 'break' | 'spontaneous',
+    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous',
     manualTap: boolean = false
   ) => {
     setIsAiLoading(true);

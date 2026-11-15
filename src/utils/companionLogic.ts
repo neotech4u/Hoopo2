@@ -319,42 +319,58 @@ export function generateFriendlyCompanionComment(
   }
 ): string {
   const cleanName = userName || 'Friend';
+  const mins = context?.tripMinutes || 15;
+  const currentSpeed = Math.round(context?.speed || 0);
 
   switch (category) {
     case 'weather':
       if (context?.weatherCondition?.toLowerCase().includes('rain')) {
-        return `${cleanName}, looks like skies are getting cloudy. Don't worry, Hoopoe's radar is keeping an eye on the path for us.`;
+        return `${cleanName}, skies look a bit overcast with rain on the horizon. Don't worry, my weather radar is tracking the clouds for us. Keep a safe following distance!`;
       }
-      return `${cleanName}, the skies are wonderfully clear today. Perfect cruising weather for our road trip, Alhamdulillah!`;
+      return `${cleanName}, the skies are wonderfully clear today! Great natural lighting and crisp visibility for our journey. Alhamdulillah!`;
 
     case 'music':
       if (context?.musicTrack?.toLowerCase().includes('quran') || context?.musicTrack?.toLowerCase().includes('mulk')) {
-        return `${cleanName}, listening to Surah Al-Mulk brings so much peace to the cabin. What a beautiful companion for the road.`;
+        return `${cleanName}, listening to Surah Al-Mulk brings so much tranquility into the car. What a peaceful companion for the highway.`;
       }
       if (context?.musicTrack?.toLowerCase().includes('nasheed')) {
-        return `${cleanName}, this acoustic nasheed has such an uplifting harmony. Really enjoy traveling with you!`;
+        return `${cleanName}, this acoustic nasheed has such an uplifting rhythm! Really love this travel vibe with you.`;
       }
-      return `${cleanName}, this track sets such a relaxing tone for the drive. Good music makes the kilometers fly by!`;
+      return `${cleanName}, this music track really sets a chill mood for the road. Good tunes make every kilometer fly by effortlessly!`;
 
     case 'break':
-      const mins = context?.tripMinutes || 45;
-      return `${cleanName}, we've been on the road for about ${mins} minutes. Remember to stay hydrated, stretch your shoulders, and take a quick rest whenever you see a nice plaza!`;
+      return `${cleanName}, we've been rolling for about ${mins} minutes. Quick posture check: roll your shoulders back, take a sip of water to stay hydrated, and let's pull in at the next tea stall if you fancy a quick chai!`;
 
     case 'smooth_driving':
-      return `${cleanName}, you're steering so smoothly today! That steady pace is fantastic for our fuel economy and keeps our CO2 footprint green.`;
+      if (currentSpeed > 0) {
+        return `${cleanName}, you're maintaining a super smooth ${currentSpeed} km/h! That steady throttle flow is saving fuel and keeping your engine purring nicely.`;
+      }
+      return `${cleanName}, smooth and calm driving today. Traveling with you is an absolute pleasure!`;
 
     case 'dhikr':
-      return `${cleanName}, SubhanAllah, look at the expanse ahead. The Prophet taught us that traveling is lighter with remembrance and patience.`;
+      return `${cleanName}, SubhanAllah, look at the horizon ahead. The Prophet taught us that journeys are filled with barakah when we remember Allah along the way.`;
 
     default:
-      const generalComments = [
-        `${cleanName}, having a great time co-piloting with you today! Where should we head next after this stretch?`,
-        `${cleanName}, road is looking good. Just relaxing and enjoying the journey together with you!`,
-        `${cleanName}, friendly tip: keeping a steady foot on the throttle saves up to 15% on fuel. You're doing awesome!`,
-        `${cleanName}, Alhamdulillah for safe passage. Remember to take a deep breath and enjoy the scenery.`,
+      const generalFriendComments = [
+        `${cleanName}, having a wonderful time riding shotgun with you today! How's the journey feeling so far?`,
+        `${cleanName}, road ahead is wide open and peaceful. Just sitting back and enjoying the drive together with you!`,
+        `${cleanName}, pro-driver tip: maintaining steady pressure on the accelerator rather than tapping it can improve mileage by up to 15%. You're already doing great!`,
+        `${cleanName}, Alhamdulillah for safe passage. Remember to take a deep breath and take in the view outside your window.`,
+        `${cleanName}, we're making good time today! Let me know if you want to locate a good roadside dhaba, prayer spot, or fuel station anytime.`,
+        `Hey ${cleanName}, just checking in on you! Road trips are best when you're relaxed. Feeling fresh behind the wheel?`,
+        `${cleanName}, love the peaceful cabin ambiance today. Where are we heading after our main stop?`,
       ];
-      return generalComments[Math.floor(Math.random() * generalComments.length)];
+      return generalFriendComments[Math.floor(Math.random() * generalFriendComments.length)];
   }
+}
+
+/**
+ * 15-Second Stopped Vehicle Trip Log Reminder
+ * Reminds driver to record odometer, fuel expense, or review trip telematics when stopped.
+ */
+export function formatStoppedTripLogReminder(userName: string, stoppedSeconds: number): string {
+  const cleanName = userName || 'Friend';
+  return `${cleanName}, we've been stopped for ${stoppedSeconds} seconds. If you've reached your stop or fueling up, remember to log your trip reading and petrol expense!`;
 }
 
 /**

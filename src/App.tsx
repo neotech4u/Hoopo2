@@ -28,6 +28,7 @@ import {
   MessageCircle,
   Sliders,
   Settings,
+  AlertOctagon,
 } from 'lucide-react';
 
 import { SpeedGauge } from './components/SpeedGauge';
@@ -44,7 +45,13 @@ import { PetrolExpenseModal } from './components/PetrolExpenseModal';
 import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
+import { EmergencyCrashModal } from './components/EmergencyCrashModal';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
+import {
+  EmergencyContact,
+  getStoredEmergencyContact,
+  evaluateCrashImpact,
+} from './utils/emergencySos';
 
 import {
   checkSpeedSafety,
@@ -257,6 +264,37 @@ export default function App() {
   const [showTripModal, setShowTripModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSosModal, setShowSosModal] = useState(false);
+  const [detectedCrashGForce, setDetectedCrashGForce] = useState(2.9);
+  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(getStoredEmergencyContact);
+
+  // Listen to accelerometer G-force deceleration & sudden impact via devicemotion
+  useEffect(() => {
+    if (!emergencyContact.enabled) return;
+
+    let lastImpactTime = 0;
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const acc = event.acceleration || event.accelerationIncludingGravity;
+      if (!acc || acc.x === null || acc.y === null || acc.z === null) return;
+
+      const evalResult = evaluateCrashImpact(
+        acc.x,
+        acc.y,
+        acc.z,
+        emergencyContact.sensitivity
+      );
+
+      const now = Date.now();
+      if (evalResult.isCrash && now - lastImpactTime > 15000 && !showSosModal) {
+        lastImpactTime = now;
+        setDetectedCrashGForce(evalResult.gForce);
+        setShowSosModal(true);
+      }
+    };
+
+    window.addEventListener('devicemotion', handleMotion);
+    return () => window.removeEventListener('devicemotion', handleMotion);
+  }, [emergencyContact, showSosModal]);
 
   // 3. Navigation & Map State (Starts clean in Free Drive mode without pre-drawn demo highway)
   const [activeRoute, setActiveRoute] = useState<RouteOption | null>(null);
@@ -489,7 +527,7 @@ export default function App() {
 
   // 14. Request AI Companion Comment via Server-Side Gemini API or Local Engine
   const handleRequestAIComment = async (
-    category: 'weather' | 'music' | 'break' | 'spontaneous'
+    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous'
   ): Promise<string | void> => {
     try {
       const response = await fetch('/api/hoopo/companion-comment', {
@@ -816,6 +854,21 @@ export default function App() {
             <Mic className="w-3.5 h-3.5 animate-pulse" />
             <span className="hidden lg:inline">Voice</span>
           </button>
+
+          {/* Emergency Crash SOS Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setDetectedCrashGForce(2.8);
+              setShowSosModal(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-red-600/30 hover:bg-red-600/50 border border-red-500 text-xs font-black text-red-300 shadow-md shadow-red-900/40 transition-all active:scale-95 animate-pulse cursor-pointer"
+            aria-label="Trigger Emergency Crash SOS Alert"
+            title="Emergency SOS: Send GPS Google Maps Pin via SMS"
+          >
+            <AlertOctagon className="w-3.5 h-3.5 text-red-400" />
+            <span className="hidden sm:inline">SOS</span>
+          </button>
         </div>
       </header>
 
@@ -928,6 +981,8 @@ export default function App() {
               onLocateMosque={() => setShowFuelModal(true)}
               onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
               onFinishRide={handleFinishRide}
+              onOpenPetrolModal={() => setShowPetrolModal(true)}
+              onOpenTripModal={() => setShowTripModal(true)}
               onRequestAIComment={handleRequestAIComment}
             />
           </div>
@@ -972,12 +1027,35 @@ export default function App() {
         onDismiss={() => setShowGreetingBanner(false)}
       />
 
-      {/* Driver User Name Edit Modal */}
+      {/* Driver User Name & Emergency SOS Settings Modal */}
       <UserProfileModal
         isOpen={showProfileModal}
         currentUserName={userName}
-        onClose={() => setShowProfileModal(false)}
+        onClose={() => {
+          setShowProfileModal(false);
+          setEmergencyContact(getStoredEmergencyContact());
+        }}
         onSaveUserName={handleUpdateUserName}
+        onTriggerSosTest={() => {
+          setShowProfileModal(false);
+          setDetectedCrashGForce(3.2);
+          setShowSosModal(true);
+        }}
+      />
+
+      {/* Emergency Crash & Deceleration SOS Modal */}
+      <EmergencyCrashModal
+        isOpen={showSosModal}
+        userName={userName}
+        realUserLocation={realUserLocation}
+        detectedGForce={detectedCrashGForce}
+        contact={emergencyContact}
+        onCancel={() => setShowSosModal(false)}
+        onSosDispatched={() => {
+          if (voiceEnabled) {
+            speakHoopoMessage(`Emergency SOS dispatch initiated to ${emergencyContact.name || 'your contact'}. Stay calm.`);
+          }
+        }}
       />
 
       {/* Driving Performance Rating Modal (Triggered after finished ride) */}

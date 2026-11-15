@@ -259,6 +259,30 @@ class SoundEngine {
     }
   }
 
+  // Emergency Crash & Impact SOS Alarm Siren (Urgent dual-tone buzzer)
+  playEmergencyAlarm() {
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      const tones = [987.77, 659.25, 987.77, 659.25]; // B5 and E5 alternating sirens
+      tones.forEach((freq, idx) => {
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.16);
+        gain.gain.setValueAtTime(0.28, now + idx * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.16 + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx!.destination);
+        osc.start(now + idx * 0.16);
+        osc.stop(now + idx * 0.16 + 0.15);
+      });
+    } catch (e) {
+      console.warn('Audio error in emergency siren:', e);
+    }
+  }
+
   // Start continuous radio audio synthesis based on station genre
   startRadioStation(frequency: number, genre: string, volume: number = 0.5) {
     this.stopRadio();

@@ -18,11 +18,17 @@ import {
   formatRainAlert,
   formatIdleCO2Alert,
   formatPrayerAlert,
+  formatStoppedTripLogReminder,
   generateFriendlyCompanionComment,
   generateCompanionDialogueReply,
   PrayerTime,
   WeatherCondition,
 } from './companionLogic';
+import {
+  evaluateCrashImpact,
+  formatEmergencySosMessage,
+  getDecelerationThreshold,
+} from './emergencySos';
 
 test('checkSpeedSafety accurately categorizes safe, caution, and danger speeds', () => {
   const safe = checkSpeedSafety(65, 80);
@@ -164,4 +170,32 @@ test('generateCompanionDialogueReply immediately returns context-aware friendly 
   const breakReply = generateCompanionDialogueReply('I feel like taking a break', 'Usman');
   assert.ok(breakReply.includes('Usman'));
   assert.ok(breakReply.toLowerCase().includes('break'));
+});
+
+test('formatStoppedTripLogReminder prompts driver to log readings after 15 seconds stationary', () => {
+  const reminder = formatStoppedTripLogReminder('Usman', 15);
+  assert.ok(reminder.includes('Usman'));
+  assert.ok(reminder.includes('15 seconds'));
+  assert.ok(reminder.includes('petrol') || reminder.includes('trip reading'));
+});
+
+test('evaluateCrashImpact correctly identifies extreme deceleration collisions', () => {
+  // Normal driving / braking (ax=2, ay=-3, az=9.8): magnitude ~10.4 m/s² (< 2.8G)
+  const normalDriving = evaluateCrashImpact(2, -3, 0, 'medium');
+  assert.equal(normalDriving.isCrash, false);
+  assert.ok(normalDriving.gForce < 2.0);
+
+  // Severe crash impact (ax=-22, ay=18, az=8): magnitude ~29.5 m/s² (> 2.8G)
+  const crashImpact = evaluateCrashImpact(-22, 18, 8, 'medium');
+  assert.equal(crashImpact.isCrash, true);
+  assert.ok(crashImpact.gForce >= 2.8);
+  assert.equal(crashImpact.gForce, 3.0);
+});
+
+test('formatEmergencySosMessage builds accurate Google Maps pin and timestamp', () => {
+  const msg = formatEmergencySosMessage('Usman', 8.7139, 77.7567, 3.2);
+  assert.ok(msg.includes('EMERGENCY ALERT'));
+  assert.ok(msg.includes('Usman'));
+  assert.ok(msg.includes('3.2G'));
+  assert.ok(msg.includes('https://maps.google.com/?q=8.71390,77.75670'));
 });
