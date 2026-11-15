@@ -23,6 +23,8 @@ import {
   createVoiceNote,
   deleteVoiceNote,
   clearAllVoiceNotes,
+  saveAudioBlob,
+  getAudioBlob,
 } from '../utils/voiceNotes';
 import { speakHoopoMessage, soundEngine } from '../utils/audioSynthesizer';
 
@@ -55,6 +57,7 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
   const [playingNoteId, setPlayingNoteId] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Audio recording refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -163,6 +166,39 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
     }, 1000);
   };
 
+  const stopMediaRecorderAsync = (): Promise<{ blob: Blob | null; mimeType: string }> => {
+    return new Promise((resolve) => {
+      const mr = mediaRecorderRef.current;
+      if (!mr) {
+        resolve({ blob: null, mimeType: 'audio/webm' });
+        return;
+      }
+      const mimeType = mr.mimeType || 'audio/webm';
+      mr.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      mr.onstop = () => {
+        const finalBlob =
+          audioChunksRef.current.length > 0
+            ? new Blob(audioChunksRef.current, { type: mimeType })
+            : null;
+        mr.stream.getTracks().forEach((track) => track.stop());
+        resolve({ blob: finalBlob, mimeType });
+      };
+      if (mr.state === 'recording') {
+        mr.stop();
+      } else {
+        const finalBlob =
+          audioChunksRef.current.length > 0
+            ? new Blob(audioChunksRef.current, { type: mimeType })
+            : null;
+        resolve({ blob: finalBlob, mimeType });
+      }
+    });
+  };
+
   const stopRecordingSession = async () => {
     setIsRecording(false);
     clearInterval(timerIntervalRef.current);
@@ -185,33 +221,48 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
   };
 
   const handleSaveRecordedNote = async () => {
-    await stopRecordingSession();
+    setIsRecording(false);
+    clearInterval(timerIntervalRef.current);
 
-    let audioDataUrl: string | undefined = undefined;
-    if (audioChunksRef.current.length > 0) {
+    if (speechRecognitionRef.current) {
       try {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        // Convert small blob to base64 Data URL
-        audioDataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(audioBlob);
-        });
-      } catch (e) {
-        console.warn('Could not encode audio blob:', e);
+        speechRecognitionRef.current.stop();
+      } catch {}
+      speechRecognitionRef.current = null;
+    }
+
+    // Wait for recorder stop event before assembling the clip
+    const { blob, mimeType } = await stopMediaRecorderAsync();
+
+    const noteText = transcript.trim() || `Voice Note (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`;
+    const generatedId = `vn-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    let hasAudio = false;
+    if (blob && blob.size > 0) {
+      const savedBlob = await saveAudioBlob(generatedId, blob);
+      if (savedBlob) {
+        hasAudio = true;
+      } else {
+        console.warn('Could not save audio blob to IndexedDB');
       }
     }
 
-    const noteText = transcript.trim() || `Voice Note (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`;
-
-    const newNote = createVoiceNote(noteText, {
-      audioDataUrl,
+    const { note: newNote, storageResult } = createVoiceNote(noteText, {
+      id: generatedId,
+      hasAudio,
       audioDurationSeconds: recordingSeconds,
+      audioMimeType: mimeType,
       lat: currentCoords ? currentCoords[0] : undefined,
       lng: currentCoords ? currentCoords[1] : undefined,
       speedKmH: Math.round(currentSpeed),
       tag: selectedTag,
     });
+
+    if (!storageResult.success) {
+      setErrorMessage(storageResult.error || 'Storage warning: unable to save note');
+    } else {
+      setErrorMessage(null);
+    }
 
     onNotesChange([newNote, ...voiceNotes.filter((n) => n.id !== newNote.id)]);
     soundEngine.playGreetingChime();
@@ -220,12 +271,16 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
     // Reset and switch to list tab
     setTranscript('');
     setRecordingSeconds(0);
+    audioChunksRef.current = [];
     setActiveTab('list');
   };
 
   const handleDeleteNote = (id: string) => {
-    const updated = deleteVoiceNote(id);
-    onNotesChange(updated);
+    const { updatedNotes, storageResult } = deleteVoiceNote(id);
+    if (!storageResult.success) {
+      setErrorMessage(storageResult.error || 'Storage error deleting note');
+    }
+    onNotesChange(updatedNotes);
     if (playingNoteId === id) {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
       setPlayingNoteId(null);
@@ -234,44 +289,55 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
 
   const handleClearAll = () => {
     if (window.confirm('Delete all recorded voice notes?')) {
-      clearAllVoiceNotes();
+      const result = clearAllVoiceNotes();
+      if (!result.success) {
+        setErrorMessage(result.error || 'Failed to clear all notes');
+      }
       onNotesChange([]);
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
       setPlayingNoteId(null);
     }
   };
 
-  const handlePlayAudioNote = (note: VoiceNote) => {
+  const handlePlayAudioNote = async (note: VoiceNote) => {
     if (playingNoteId === note.id) {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
       setPlayingNoteId(null);
       return;
     }
 
-    if (note.audioDataUrl) {
+    if (note.hasAudio) {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
-      const audio = new Audio(note.audioDataUrl);
-      audioPlayerRef.current = audio;
-      setPlayingNoteId(note.id);
+      const blob = await getAudioBlob(note.id);
+      if (blob) {
+        const objectUrl = URL.createObjectURL(blob);
+        const audio = new Audio(objectUrl);
+        audioPlayerRef.current = audio;
+        setPlayingNoteId(note.id);
 
-      audio.onended = () => {
-        setPlayingNoteId(null);
-      };
-      audio.onerror = () => {
-        setPlayingNoteId(null);
-        // Fallback to text-to-speech
-        speakHoopoMessage(note.transcript);
-      };
-      audio.play().catch(() => {
-        setPlayingNoteId(null);
-        speakHoopoMessage(note.transcript);
-      });
-    } else {
-      // Read aloud via TTS
-      speakHoopoMessage(note.transcript);
+        audio.onended = () => {
+          URL.revokeObjectURL(objectUrl);
+          setPlayingNoteId(null);
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          setPlayingNoteId(null);
+          // Fallback to text-to-speech
+          speakHoopoMessage(note.transcript);
+        };
+        audio.play().catch(() => {
+          URL.revokeObjectURL(objectUrl);
+          setPlayingNoteId(null);
+          speakHoopoMessage(note.transcript);
+        });
+        return;
+      }
     }
+
+    // Read aloud via TTS if no audio blob
+    speakHoopoMessage(note.transcript);
   };
 
   const handleCopyNote = (note: VoiceNote) => {
@@ -370,6 +436,16 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
             </button>
           )}
         </div>
+
+        {/* Storage Error Alert Banner */}
+        {errorMessage && (
+          <div className="mx-4 mt-2 p-2 rounded-xl bg-red-950/80 border border-red-500/60 text-red-300 text-xs flex items-center justify-between">
+            <span>{errorMessage}</span>
+            <button type="button" onClick={() => setErrorMessage(null)} className="p-0.5 hover:text-white">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-4">
@@ -672,12 +748,12 @@ export const QuickVoiceNotesModal: React.FC<QuickVoiceNotesModalProps> = ({
                               </>
                             ) : (
                               <>
-                                {note.audioDataUrl ? (
+                                {note.hasAudio ? (
                                   <Play className="w-3.5 h-3.5" />
                                 ) : (
                                   <Volume2 className="w-3.5 h-3.5" />
                                 )}
-                                <span>{note.audioDataUrl ? 'Play Audio' : 'Speak Note'}</span>
+                                <span>{note.hasAudio ? 'Play Audio' : 'Speak Note'}</span>
                               </>
                             )}
                           </button>

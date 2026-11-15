@@ -176,6 +176,55 @@ interface MapCenterProps {
   onSelectNewRoute?: (newRoute: RouteOption) => void;
 }
 
+// Custom Offline-Aware Leaflet TileLayer that attempts to read pre-cached tiles from CacheStorage
+const createOfflineAwareTileLayer = (url: string, options: L.TileLayerOptions): L.TileLayer => {
+  const OfflineTileLayer = (L.TileLayer as any).extend({
+    createTile(coords: any, done: (error: any, tile: HTMLImageElement) => void) {
+      const tile = document.createElement('img');
+      L.DomEvent.on(tile, 'load', (L.Util as any).bind((this as any)._tileOnLoad, this, done, tile));
+      L.DomEvent.on(tile, 'error', (L.Util as any).bind((this as any)._tileOnError, this, done, tile));
+
+      if (this.options.crossOrigin || this.options.crossOrigin === '') {
+        tile.crossOrigin = this.options.crossOrigin === true ? '' : this.options.crossOrigin;
+      }
+
+      tile.alt = '';
+      tile.setAttribute('role', 'presentation');
+
+      const tileUrl = this.getTileUrl(coords);
+
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        caches
+          .open('hoopo-offline-maps-v1')
+          .then((cache) => cache.match(tileUrl))
+          .then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse.blob().then((blob) => {
+                const objectUrl = URL.createObjectURL(blob);
+                tile.onload = () => {
+                  URL.revokeObjectURL(objectUrl);
+                  done(null, tile);
+                };
+                tile.src = objectUrl;
+              });
+            } else {
+              tile.src = tileUrl;
+            }
+          })
+          .catch(() => {
+            tile.src = tileUrl;
+          });
+      } else {
+        tile.src = tileUrl;
+      }
+
+      return tile;
+    },
+  });
+
+  return new OfflineTileLayer(url, options) as L.TileLayer;
+};
+
 export const MapCenter: React.FC<MapCenterProps> = ({
   currentSpeed,
   activeRoute,
@@ -260,23 +309,49 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     }
   });
 
-  // Live Geocoding Search Effect (OpenStreetMap Nominatim)
+  const searchRequestIdRef = useRef<number>(0);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
+
+  // Live Geocoding Search Effect (OpenStreetMap Nominatim with AbortController & Request Sequencing)
   useEffect(() => {
     if (!searchQuery || searchQuery.trim().length < 2) {
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+        searchAbortControllerRef.current = null;
+      }
       setLiveSearchResults([]);
       setIsSearchingLive(false);
       return;
     }
 
+    const currentRequestId = ++searchRequestIdRef.current;
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+    }
+    const abortCtrl = new AbortController();
+    searchAbortControllerRef.current = abortCtrl;
+
     const timer = setTimeout(async () => {
       setIsSearchingLive(true);
-      const userPos = realUserLocation || activeRoute?.waypoints?.[0] || [8.7139, 77.7567];
-      const results = await searchPlacesLive(searchQuery, userPos[0], userPos[1]);
-      setLiveSearchResults(results);
-      setIsSearchingLive(false);
-    }, 450);
+      try {
+        const userPos = realUserLocation || activeRoute?.waypoints?.[0] || [8.7139, 77.7567];
+        const results = await searchPlacesLive(searchQuery, userPos[0], userPos[1], abortCtrl.signal);
+        // Only accept if this is still the latest active request and wasn't cancelled
+        if (currentRequestId === searchRequestIdRef.current && !abortCtrl.signal.aborted) {
+          setLiveSearchResults(results);
+          setIsSearchingLive(false);
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && currentRequestId === searchRequestIdRef.current) {
+          setIsSearchingLive(false);
+        }
+      }
+    }, 400);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortCtrl.abort();
+    };
   }, [searchQuery, realUserLocation, activeRoute?.waypoints]);
 
   const handleToggleOfflineMode = () => {
@@ -294,7 +369,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
 
   const handleSaveRouteOffline = async () => {
     setIsCachingInProgress(true);
-    setCachingProgressPercent(12);
+    setCachingProgressPercent(10);
 
     // Compute waypoints based on user route direction or Tirunelveli defaults
     const waypoints: [number, number][] = selectedDestination
@@ -308,20 +383,29 @@ export const MapCenter: React.FC<MapCenterProps> = ({
           [8.9500, 77.7700],
         ];
 
-    // Generate tile URLs covering route waypoints across zoom levels 11, 12, 13, 14
+    // Generate tile URLs covering route waypoints with corridor surrounding coverage (3x3 grid per waypoint)
     const tileUrls: string[] = [];
     const zooms = [12, 13, 14];
     for (const [lat, lng] of waypoints) {
       for (const z of zooms) {
-        const x = Math.floor(((lng + 180) / 360) * Math.pow(2, z));
+        const centerX = Math.floor(((lng + 180) / 360) * Math.pow(2, z));
         const latRad = (lat * Math.PI) / 180;
-        const y = Math.floor(
+        const centerY = Math.floor(
           ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z)
         );
-        tileUrls.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
-        tileUrls.push(`https://mt1.google.com/vt/lyrs=m&x=${x}&y=${y}&z=${z}`);
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const x = centerX + dx;
+            const y = centerY + dy;
+            tileUrls.push(`https://tile.openstreetmap.org/${z}/${x}/${y}.png`);
+            tileUrls.push(`https://mt1.google.com/vt/lyrs=m&x=${x}&y=${y}&z=${z}`);
+          }
+        }
       }
     }
+
+    let savedTilesCount = 0;
+    let totalBytesSaved = 0;
 
     try {
       if ('caches' in window) {
@@ -329,12 +413,33 @@ export const MapCenter: React.FC<MapCenterProps> = ({
         const uniqueUrls = Array.from(new Set(tileUrls));
         const total = uniqueUrls.length;
         for (let i = 0; i < total; i++) {
+          const url = uniqueUrls[i];
           try {
-            await cache.add(uniqueUrls[i]);
+            const response = await fetch(url, { mode: 'cors' });
+            if (response.ok) {
+              const blob = await response.blob();
+              totalBytesSaved += blob.size;
+              savedTilesCount++;
+              await cache.put(
+                url,
+                new Response(blob, {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: response.headers,
+                })
+              );
+            }
           } catch {
-            // ignore network/cross-origin exceptions in browser
+            // Fallback for tile servers requiring opaque/no-cors mode
+            try {
+              await cache.add(new Request(url, { mode: 'no-cors' }));
+              savedTilesCount++;
+              totalBytesSaved += 32768; // ~32KB typical tile size
+            } catch {
+              // Ignore failure, do not increment count
+            }
           }
-          if (i % 4 === 0) {
+          if (i % 6 === 0 || i === total - 1) {
             setCachingProgressPercent(15 + Math.round(((i + 1) / total) * 80));
           }
         }
@@ -343,29 +448,26 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       console.warn('Cache API warning:', e);
     }
 
-    // Finish step progress
-    setTimeout(() => {
-      setCachingProgressPercent(100);
-      const tilesAdded = Math.max(48, Math.min(tileUrls.length, 120));
-      const newCount = cachedTilesCount + tilesAdded;
-      const newSize = Math.round((cachedSizeMb + tilesAdded * 0.052) * 10) / 10;
-      const dateStr = new Date().toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      setCachedTilesCount(newCount);
-      setCachedSizeMb(newSize);
-      const label = `${dateStr} (${activeTargetName.slice(0, 22)})`;
-      setLastCacheDate(label);
-      try {
-        localStorage.setItem('hoopo_offline_tiles_count', String(newCount));
-        localStorage.setItem('hoopo_offline_size_mb', String(newSize));
-        localStorage.setItem('hoopo_offline_last_cached', label);
-      } catch {}
-      setIsCachingInProgress(false);
-    }, 800);
+    setCachingProgressPercent(100);
+    const addedMb = Math.round((totalBytesSaved / (1024 * 1024)) * 10) / 10;
+    const newCount = cachedTilesCount + savedTilesCount;
+    const newSize = Math.round((cachedSizeMb + addedMb) * 10) / 10;
+    const dateStr = new Date().toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    setCachedTilesCount(newCount);
+    setCachedSizeMb(newSize);
+    const label = `${dateStr} (${activeTargetName.slice(0, 22)})`;
+    setLastCacheDate(label);
+    try {
+      localStorage.setItem('hoopo_offline_tiles_count', String(newCount));
+      localStorage.setItem('hoopo_offline_size_mb', String(newSize));
+      localStorage.setItem('hoopo_offline_last_cached', label);
+    } catch {}
+    setIsCachingInProgress(false);
   };
 
   const handleClearOfflineCache = () => {
@@ -416,7 +518,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
         initialUrl = GOOGLE_MAPS_TILES.osm;
       }
 
-      const tileLayer = L.tileLayer(initialUrl, {
+      const tileLayer = createOfflineAwareTileLayer(initialUrl, {
         className: initialClass,
         maxZoom: 20,
       });
@@ -477,13 +579,13 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       url = GOOGLE_MAPS_TILES.osm;
     }
 
-    const newTileLayer = L.tileLayer(url, {
+    const newTileLayer = createOfflineAwareTileLayer(url, {
       className,
       maxZoom: 20,
     });
     newTileLayer.addTo(map);
     tileLayerRef.current = newTileLayer;
-  }, [mapTileType, nightMode]);
+  }, [mapTileType, nightMode, isOfflineModeActive]);
 
   // Handle Real User Location updates (GPS): Automatically pins and centers
   useEffect(() => {
@@ -1455,7 +1557,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       {isOfflineModeActive && (
         <div className="absolute top-16 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950/85 border border-amber-500/60 text-amber-300 text-[10px] font-bold shadow-lg backdrop-blur-md">
           <WifiOff className="w-3 h-3 text-amber-400" />
-          <span>OFFLINE MAP ACTIVE</span>
+          <span>OFFLINE MODE (EXPERIMENTAL TILE CACHE)</span>
         </div>
       )}
 
@@ -1477,7 +1579,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                     Offline Map Engine &bull; Tirunelveli &amp; South TN
                   </span>
                   <h3 className="text-sm font-bold text-white">
-                    Offline Map Cache Manager
+                    Offline Map Cache Manager (Experimental)
                   </h3>
                 </div>
               </div>
@@ -1510,7 +1612,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
               <div>
                 <span className="text-xs font-bold text-white block">Offline Mode</span>
                 <span className="text-[11px] text-slate-400">
-                  Navigate using cached tiles without cellular data.
+                  Navigate using pre-cached route corridor tiles (experimental cache).
                 </span>
               </div>
               <button

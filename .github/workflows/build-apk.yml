@@ -36,7 +36,10 @@ jobs:
           java-version: '21'
 
       - name: Install NPM Dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Run Unit Tests
+        run: npm test
 
       - name: Build Web Application
         run: npm run build

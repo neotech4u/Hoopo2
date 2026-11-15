@@ -25,15 +25,15 @@ test('parseVoiceNoteTrigger detects various voice commands accurately', () => {
 });
 
 test('createVoiceNote smartly categorizes tags according to keywords', () => {
-  const maintenanceNote = createVoiceNote('Need to replace front brake pads and check tire pressure');
+  const { note: maintenanceNote } = createVoiceNote('Need to replace front brake pads and check tire pressure');
   assert.equal(maintenanceNote.tag, 'Car Maintenance');
 
-  const fuelNote = createVoiceNote('Spent 1500 rupees at Indian Oil fuel bunk');
+  const { note: fuelNote } = createVoiceNote('Spent 1500 rupees at Indian Oil fuel bunk');
   assert.equal(fuelNote.tag, 'Fuel / Expense');
 
-  const reminderNote = createVoiceNote('Remember to call hotel reception before 9 PM');
+  const { note: reminderNote } = createVoiceNote('Remember to call hotel reception before 9 PM');
   assert.equal(reminderNote.tag, 'Reminder');
 
-  const memoryNote = createVoiceNote('Such a scenic sunset view along Western Ghats highway');
+  const { note: memoryNote } = createVoiceNote('Such a scenic sunset view along Western Ghats highway');
   assert.equal(memoryNote.tag, 'Trip Memory');
 });

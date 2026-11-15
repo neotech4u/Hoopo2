@@ -2,14 +2,16 @@
  * Voice Notes Utility for Hoopoe AI Car Companion
  * Allows drivers to record quick, hands-free voice notes while driving
  * (e.g. maintenance reminders, route notes, travel memories, fuel logs).
+ * Audio blobs are stored safely in IndexedDB while metadata is stored in localStorage.
  */
 
 export interface VoiceNote {
   id: string;
   title: string;
   transcript: string;
-  audioDataUrl?: string; // Optional audio recording (base64 data URL)
+  hasAudio?: boolean;
   audioDurationSeconds?: number;
+  audioMimeType?: string;
   timestamp: string; // ISO 8601
   createdTimeFormatted: string; // e.g. "19:15"
   dateFormatted: string; // e.g. "15 Nov 2026"
@@ -21,6 +23,110 @@ export interface VoiceNote {
 }
 
 const STORAGE_KEY = 'hoopo_voice_notes';
+const IDB_NAME = 'hoopo_voice_notes_db';
+const IDB_VERSION = 1;
+const IDB_STORE_AUDIO = 'audio_blobs';
+
+/**
+ * Open or initialize the IndexedDB for audio blob persistence
+ */
+function openVoiceNotesDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      return reject(new Error('IndexedDB not supported in this environment'));
+    }
+
+    const request = window.indexedDB.open(IDB_NAME, IDB_VERSION);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(IDB_STORE_AUDIO)) {
+        db.createObjectStore(IDB_STORE_AUDIO);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Failed to open IndexedDB'));
+  });
+}
+
+/**
+ * Save audio blob into IndexedDB
+ */
+export async function saveAudioBlob(noteId: string, blob: Blob): Promise<boolean> {
+  try {
+    const db = await openVoiceNotesDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_AUDIO, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_AUDIO);
+      const req = store.put(blob, noteId);
+
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error || new Error('Failed to put blob'));
+    });
+  } catch (err) {
+    console.error('Failed to save audio blob to IndexedDB:', err);
+    return false;
+  }
+}
+
+/**
+ * Retrieve audio blob from IndexedDB
+ */
+export async function getAudioBlob(noteId: string): Promise<Blob | null> {
+  try {
+    const db = await openVoiceNotesDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_AUDIO, 'readonly');
+      const store = tx.objectStore(IDB_STORE_AUDIO);
+      const req = store.get(noteId);
+
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error || new Error('Failed to get blob'));
+    });
+  } catch (err) {
+    console.warn('Failed to read audio blob from IndexedDB:', err);
+    return null;
+  }
+}
+
+/**
+ * Delete audio blob from IndexedDB
+ */
+export async function deleteAudioBlob(noteId: string): Promise<void> {
+  try {
+    const db = await openVoiceNotesDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_AUDIO, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_AUDIO);
+      const req = store.delete(noteId);
+
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('Failed to delete audio blob from IndexedDB:', err);
+  }
+}
+
+/**
+ * Clear all audio blobs from IndexedDB
+ */
+export async function clearAllAudioBlobs(): Promise<void> {
+  try {
+    const db = await openVoiceNotesDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE_AUDIO, 'readwrite');
+      const store = tx.objectStore(IDB_STORE_AUDIO);
+      const req = store.clear();
+
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('Failed to clear audio blobs from IndexedDB:', err);
+  }
+}
 
 /**
  * Retrieve saved voice notes from persistent storage
@@ -52,19 +158,27 @@ export function getStoredVoiceNotes(): VoiceNote[] {
       locationName: 'Tirunelveli Bypass',
       speedKmH: 72,
       tag: 'Car Maintenance',
+      hasAudio: false,
     },
   ];
 }
 
 /**
- * Persist voice notes array to local storage
+ * Persist voice notes array to local storage with explicit error surfacing
  */
-export function saveStoredVoiceNotes(notes: VoiceNote[]): void {
-  if (typeof window === 'undefined') return;
+export function saveStoredVoiceNotes(notes: VoiceNote[]): { success: boolean; error?: string } {
+  if (typeof window === 'undefined') return { success: true };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  } catch (e) {
-    console.error('Failed to save voice notes:', e);
+    return { success: true };
+  } catch (e: any) {
+    console.error('Failed to save voice notes to localStorage:', e);
+    return {
+      success: false,
+      error: e?.name === 'QuotaExceededError'
+        ? 'Storage quota exceeded. Please delete some old voice notes or trips.'
+        : 'Failed to save voice notes due to a storage error.',
+    };
   }
 }
 
@@ -74,16 +188,18 @@ export function saveStoredVoiceNotes(notes: VoiceNote[]): void {
 export function createVoiceNote(
   transcript: string,
   options?: {
+    id?: string;
     title?: string;
-    audioDataUrl?: string;
+    hasAudio?: boolean;
     audioDurationSeconds?: number;
+    audioMimeType?: string;
     lat?: number;
     lng?: number;
     locationName?: string;
     speedKmH?: number;
     tag?: VoiceNote['tag'];
   }
-): VoiceNote {
+): { note: VoiceNote; storageResult: { success: boolean; error?: string } } {
   const now = new Date();
   const cleanTranscript = (transcript || '').trim();
   
@@ -110,12 +226,15 @@ export function createVoiceNote(
     autoTag = 'Trip Memory';
   }
 
+  const noteId = options?.id || `vn-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
   const note: VoiceNote = {
-    id: `vn-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    id: noteId,
     title: generatedTitle,
     transcript: cleanTranscript,
-    audioDataUrl: options?.audioDataUrl,
+    hasAudio: options?.hasAudio || false,
     audioDurationSeconds: options?.audioDurationSeconds,
+    audioMimeType: options?.audioMimeType,
     timestamp: now.toISOString(),
     createdTimeFormatted: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     dateFormatted: now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -128,25 +247,27 @@ export function createVoiceNote(
 
   const existing = getStoredVoiceNotes();
   const updated = [note, ...existing];
-  saveStoredVoiceNotes(updated);
-  return note;
+  const storageResult = saveStoredVoiceNotes(updated);
+  return { note, storageResult };
 }
 
 /**
- * Delete a voice note by id
+ * Delete a voice note by id and remove its audio blob
  */
-export function deleteVoiceNote(id: string): VoiceNote[] {
+export function deleteVoiceNote(id: string): { updatedNotes: VoiceNote[]; storageResult: { success: boolean; error?: string } } {
+  deleteAudioBlob(id);
   const existing = getStoredVoiceNotes();
   const filtered = existing.filter((n) => n.id !== id);
-  saveStoredVoiceNotes(filtered);
-  return filtered;
+  const storageResult = saveStoredVoiceNotes(filtered);
+  return { updatedNotes: filtered, storageResult };
 }
 
 /**
- * Clear all voice notes
+ * Clear all voice notes and all audio blobs
  */
-export function clearAllVoiceNotes(): void {
-  saveStoredVoiceNotes([]);
+export function clearAllVoiceNotes(): { success: boolean; error?: string } {
+  clearAllAudioBlobs();
+  return saveStoredVoiceNotes([]);
 }
 
 /**
@@ -184,7 +305,6 @@ export function parseVoiceNoteTrigger(transcript: string): {
   }
 
   if (lower.includes('take a note') || lower.includes('voice note') || lower.includes('remember this')) {
-    // Extract whatever follows
     const match = clean.match(/(?:take a note|voice note|remember this)\s*(?:that|to)?\s*[:,-]?\s*(.*)/i);
     if (match && match[1]) {
       return {

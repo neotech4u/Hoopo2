@@ -24,18 +24,19 @@
 - **Live Traffic Flow Layer**: Multi-colored polyline overlay representing smooth (green), moderate (orange), and congested (red) traffic with speed bottleneck badges.
 - **En-Route Rain Radar**: Dynamic Doppler precipitation overlay alerting drivers ahead of wet highway sections.
 - **Integrated Fuel Station Locator**: Interactive markers for highway service plazas (Aramco, Shell, Petronas, ADNOC) with live fuel prices and roadside amenities (Musalla, Halal Cafe, EV fast charging, 24/7 Car Wash).
-- **Drive Simulation Controls**: Play, pause, and reset driving simulation to preview routes and trip alerts.
+- **Automated GPS Follow & Recenter**: Automatic vehicle lock-on and GPS follow-car tracking with smooth hardware coordinates.
 
-### 3. 💾 Offline Google Map Saving & Caching
-- **Browser CacheStorage & IndexedDB Engine**: Save route tiles and geographic regions locally for driving without cellular network coverage.
-- **Offline Storage Manager**: Displays number of cached tiles and storage space used (MB) with 1-click cache updates.
-- **Offline Mode Navigation Switch**: Toggle simulated zero-network navigation with a persistent HUD badge.
+### 3. 💾 Offline Map Saving & Caching (Experimental)
+- **Browser CacheStorage Engine**: Pre-caches route corridor tiles (OpenStreetMap & Google Maps) locally across zoom levels for areas with weak or absent cellular network coverage.
+- **Offline Storage Manager**: Displays exact number of successfully cached tiles and actual storage space used (MB) with 1-click corridor caching and cache clearing.
+- **Offline Mode Navigation Switch**: Toggle offline mode with a persistent HUD status badge (`OFFLINE MODE (EXPERIMENTAL TILE CACHE)`).
 
 ### 4. 🦅 Hoopoe AI Travel Buddy (Right Column)
 - **Autonomous Avionic Companion Drone Mascot**: Inspired by the historic Hoopoe bird—symbol of travel guidance and navigation—featuring aerodynamic variable-geometry swept wings, a glowing HUD cyclopean scanner eye, and animated dual ion micro-thrusters with pulsing plasma exhaust.
-- **Spontaneous Friendly Banter**: Hoopoe AI casually and spontaneously drops conversational thoughts every 90–120 seconds while cruising (weather observations, music commentary, road break reminders, and dhikr).
+- **Spontaneous Friendly Banter**: Hoopoe AI casually and spontaneously drops conversational thoughts (with comfortable intervals > 220s between unprompted remarks) while cruising (weather observations, music commentary, road break reminders, and dhikr).
+- **Voice-Activated Quick Notes**: Record hands-free voice notes saved with native audio MIME types directly to IndexedDB.
 - **Interactive Touch Feedback**: Tap Hoopoe’s wings anytime for an instant friendly travel remark.
-- **Driver Name Callouts**: Hoopoe addresses the driver naturally by their custom name in all emergency alerts and casual remarks.
+- **Driver Name Callouts**: Hoopoe addresses the driver naturally by their custom name in travel alerts and casual remarks.
 
 ### 5. 🕌 Islamic Travel Features & Authentic Arabic Pronunciation
 - **Opening Travel Dua Modal**: Recitation of the authentic travel prayer (*Dua as-Safar*, Sahih Muslim 2392) in Arabic with complete Tamil phonetic transliteration.
@@ -53,11 +54,11 @@
 - **Automated 40s Idle Alert**: When stopped with ignition running for > 40 seconds, Hoopoe AI alerts the driver to turn off the engine and prevent fuel waste.
 
 ### 8. ⛽ Manual Petrol & Expense Logger
-- Refill logbook tracking volume in liters, total expense ($), service station name, odometer reading, and custom notes with full local persistence.
+- Refill logbook tracking volume in liters, total expense (₹), service station name, odometer reading, and custom notes with full local persistence.
 
 ### 9. 📊 Ignition-Based Trip Log & Post-Ride Driving Rating
-- **Trip Telematics**: Automatically tracks trip start/end times, distance, duration, top speed, and total carbon footprint based on ignition state.
-- **Driving Performance Rating Scorecard**: Triggered upon turning off the ignition or finishing a ride; calculates an overall score (0–100), letter grade (A+ to D), safety index, eco-efficiency score, and tailored driving recommendations.
+- **Trip Telematics**: Automatically tracks trip start/end times, distance, duration, top speed, and carbon footprint based on measured GPS movements and wall-clock timestamps.
+- **Driving Performance Rating Scorecard**: Triggered upon finishing a ride; calculates an overall score (0–100), letter grade (A+ to D), safety index, eco-efficiency score, and tailored driving recommendations (qualifying or suppressing ratings for stationary or micro trips).
 
 ### 10. ⚙️ Voice Settings & Driver Profile
 - **Customizable Driver Name**: Set what Hoopoe AI and the audio system call you.
@@ -71,32 +72,18 @@
 
 The application includes full **Progressive Web App (PWA)**, **Android WebAPK**, and **Capacitor native Android** support:
 
-### Option 1: Direct On-Device WebAPK Install
-1. Open the app link in **Google Chrome** on your Android device:
-   ```
-   https://ais-pre-nvonhn7yskqyazeqwydrre-836165470922.asia-northeast1.run.app
-   ```
-2. Tap the **"Install APK"** button in the cockpit header (or Chrome menu `⋮` → **Install app**).
-3. Android OS automatically compiles and signs a native `.apk` (`com.android.chrome.webapk.*`), installing Hoopoe into your app drawer with fullscreen HUD, hardware GPS, and offline caching.
+### Option 1: Direct Android APK Download (Recommended)
+Download the standalone production signed APK directly from [GitHub Releases](https://github.com/neotech4u/Hoopo2/releases):
+- File: `Hoopoe-Car-Companion.apk`
+- Features: Full landscape HUD, persistent background audio, hardware GPS lock, and offline corridor tile caching.
 
 ### Option 2: Automated GitHub Actions CI/CD Pipeline
-This repository includes `.github/workflows/build-apk.yml`. Pushing to GitHub triggers an automated cloud build using Java 17 and Android SDK:
-1. Create a repository on GitHub (e.g. `hoopoe-car-companion`).
-2. Push your code:
-   ```bash
-   git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/hoopoe-car-companion.git
-   git branch -M main
-   git push -u origin main
-   ```
-3. Open the **Actions** tab in GitHub to download `hoopoe-car-companion-debug-apk.zip` from the build artifacts!
+This repository includes `.github/workflows/build-apk.yml`. Pushing tags (`v*`) triggers an automated cloud build using Java 21, Gradle, and Android SDK, publishing the APK directly to GitHub Releases.
 
-### Option 3: Cloud 1-Click APK Generator (PWABuilder)
-Click **"Install APK"** in the cockpit header and open the **Cloud APK Builder** tab to generate a signed `.apk` or Google Play `.aab` package via PWABuilder in 30 seconds.
-
-### Option 4: Local Android Studio Build
+### Option 3: Local Android Studio Build
 ```bash
 npm run build
-npx @capacitor/cli add android
+npx @capacitor/cli sync android
 npx @capacitor/cli open android
 ```
 In Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK(s)** to generate:
@@ -109,10 +96,10 @@ In Android Studio: **Build → Build Bundle(s) / APK(s) → Build APK(s)** to ge
 - **Framework**: React 19 SPA with TypeScript
 - **Styling**: Tailwind CSS v4 with dark automotive aesthetics
 - **Build Tool**: Vite 8 & `vite-plugin-pwa`
-- **Server**: Express backend (`server.ts`) with `@google/genai` (Gemini 3.8 Flash model) for natural companion conversations
-- **Mapping**: Leaflet 1.9 with custom HUD vehicle markers
-- **Audio**: Web Audio API oscillator synthesis & SpeechSynthesis with Arabic phonetic tuning
-- **Mobile Packaging**: Capacitor, WebAPK, and GitHub Actions CI/CD
+- **Server**: Express backend (`server.ts`) with `@google/genai` (Gemini 2.5 Flash model) with rate limiting, input sanitization, and timeout cancellation
+- **Mapping**: Leaflet 1.9 with custom HUD vehicle markers and CacheStorage tile loader
+- **Audio**: Web Audio API oscillator synthesis, MediaRecorder with IndexedDB blob storage, and SpeechSynthesis with Arabic phonetic tuning
+- **Mobile Packaging**: Capacitor and GitHub Actions CI/CD
 
 ---
 
@@ -125,8 +112,8 @@ npm install
 # Start development server on port 3000
 npm run dev
 
-# Run unit tests (EPA models, GPS velocity, companion logic)
-npx tsx --test src/utils/companionLogic.test.ts
+# Run unit tests (Companion logic, Voice notes IndexedDB, Astronomical prayer times)
+npm test
 
 # Production build
 npm run build

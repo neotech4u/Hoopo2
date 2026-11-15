@@ -55,7 +55,8 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
 export async function searchPlacesLive(
   query: string,
   userLat?: number,
-  userLng?: number
+  userLng?: number,
+  signal?: AbortSignal
 ): Promise<LivePlaceResult[]> {
   if (!query || query.trim().length < 2) return [];
 
@@ -72,6 +73,7 @@ export async function searchPlacesLive(
 
   try {
     const response = await fetch(url, {
+      signal,
       headers: {
         'Accept-Language': 'en-US,en;q=0.9,ta;q=0.8',
       },

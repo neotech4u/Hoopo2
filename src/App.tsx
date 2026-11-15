@@ -457,12 +457,13 @@ export default function App() {
         setGpsStatus('locked');
 
         // Check if browser provides direct speed in m/s
+        let kmh = 0;
         if (speed !== null && speed !== undefined && speed >= 0) {
-          const kmh = Math.round(speed * 3.6 * 10) / 10;
+          kmh = Math.round(speed * 3.6 * 10) / 10;
           setCalculatedGpsSpeed(kmh);
         } else if (prevGpsPosRef.current) {
           // Calculate Haversine speed from position delta
-          const v = calculateGpsVelocity(
+          kmh = calculateGpsVelocity(
             prevGpsPosRef.current.lat,
             prevGpsPosRef.current.lng,
             prevGpsPosRef.current.time,
@@ -470,7 +471,27 @@ export default function App() {
             longitude,
             now
           );
-          setCalculatedGpsSpeed(v);
+          setCalculatedGpsSpeed(kmh);
+        }
+
+        // Accumulate distance from GPS position deltas rather than 1s timer ticks
+        if (prevGpsPosRef.current && ignitionOn) {
+          const deltaMeters = calculateHaversineDistance(
+            prevGpsPosRef.current.lat,
+            prevGpsPosRef.current.lng,
+            latitude,
+            longitude
+          );
+          // Filter out GPS jitter (< 3 meters) and unrealistic jumps (> 500 meters per update)
+          if (deltaMeters >= 3 && deltaMeters < 500) {
+            const deltaKm = deltaMeters / 1000;
+            setTripDistance((prev) => prev + deltaKm);
+            setOdometerKm((prev) => prev + deltaKm);
+          }
+        }
+
+        if (kmh > 0) {
+          setTripMaxSpeed((m) => Math.max(m, kmh));
         }
 
         prevGpsPosRef.current = { lat: latitude, lng: longitude, time: now };
@@ -482,22 +503,19 @@ export default function App() {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [ignitionOn]);
 
-  // 13. Odometer & Trip Telematics Tracker (tracks real driving when vehicle is moving)
+  // 13. Odometer & Trip Telematics Tracker (uses wall-clock elapsed timestamps to avoid background throttling)
   useEffect(() => {
     let driveInterval: any = null;
-    if (ignitionOn && currentSpeed > 0) {
+    if (ignitionOn) {
       driveInterval = setInterval(() => {
-        const deltaKm = currentSpeed / 3600; // km per second
-        setTripDistance((prev) => prev + deltaKm);
-        setTripSeconds((prev) => prev + 1);
-        setOdometerKm((prev) => prev + deltaKm);
-        setTripMaxSpeed((m) => Math.max(m, currentSpeed));
+        const elapsedSecs = Math.max(0, Math.floor((Date.now() - tripStartTime.getTime()) / 1000));
+        setTripSeconds(elapsedSecs);
       }, 1000);
     }
     return () => clearInterval(driveInterval);
-  }, [ignitionOn, currentSpeed]);
+  }, [ignitionOn, tripStartTime]);
 
   // 14. Request AI Companion Comment via Server-Side Gemini API or Local Engine
   const handleRequestAIComment = async (
@@ -533,14 +551,26 @@ export default function App() {
 
   // Trigger Finish Ride & Show Driving Rating
   const handleFinishRide = () => {
-    const finalDistance = Math.max(tripDistance, 8.5);
-    const finalDuration = Math.max(tripSeconds, 180);
-    const finalMaxSpeed = Math.max(tripMaxSpeed, currentSpeed, 75);
+    const elapsedSecs = Math.max(1, Math.floor((Date.now() - tripStartTime.getTime()) / 1000));
+    const finalDistance = Math.round(tripDistance * 10) / 10;
+    const finalDuration = elapsedSecs;
+    const finalMaxSpeed = Math.round(tripMaxSpeed);
+
+    // If trip was too brief to compute telematics (< 0.2 km and < 30s), avoid fabricating ratings
+    if (finalDistance < 0.2 && finalDuration < 30) {
+      setIgnitionOn(false);
+      setCalculatedGpsSpeed(0);
+      setCruiseControlActive(false);
+      if (voiceEnabled) {
+        speakHoopoMessage(`${userName}, ignition turned off. Trip was too brief to compute driving rating.`);
+      }
+      return;
+    }
 
     const rating = calculateDrivingRating(
-      Math.round(finalDistance * 10) / 10,
+      finalDistance,
       finalDuration,
-      Math.round(finalMaxSpeed),
+      finalMaxSpeed,
       speedLimit,
       idleSeconds,
       userName
@@ -694,7 +724,7 @@ export default function App() {
         break;
       case 'VOICE_NOTE':
         if (cmd.query) {
-          const newNote = createVoiceNote(cmd.query, {
+          const { note: newNote } = createVoiceNote(cmd.query, {
             lat: realUserLocation ? realUserLocation[0] : undefined,
             lng: realUserLocation ? realUserLocation[1] : undefined,
             speedKmH: Math.round(currentSpeed),
@@ -1032,11 +1062,11 @@ export default function App() {
         <DrivingRatingModal
           isOpen={showRatingModal}
           rating={latestRating}
-          tripDistance={Math.round(Math.max(tripDistance, 8.5) * 10) / 10}
-          tripDurationSeconds={Math.max(tripSeconds, 180)}
-          maxSpeedKmH={Math.round(Math.max(tripMaxSpeed, currentSpeed, 75))}
-          avgSpeedKmH={Math.round(currentSpeed > 0 ? currentSpeed * 0.85 : 48)}
-          totalCO2Grams={calculateStandardDrivingCO2(Math.max(tripDistance, 8.5), currentSpeed || 60).gramsCO2}
+          tripDistance={Math.round(tripDistance * 10) / 10}
+          tripDurationSeconds={tripSeconds}
+          maxSpeedKmH={Math.round(tripMaxSpeed)}
+          avgSpeedKmH={Math.round(tripSeconds > 0 ? (tripDistance / (tripSeconds / 3600)) : 0)}
+          totalCO2Grams={calculateStandardDrivingCO2(tripDistance, currentSpeed || 50).gramsCO2}
           idleSeconds={idleSeconds}
           onClose={() => setShowRatingModal(false)}
           onStartNewRide={() => {

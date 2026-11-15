@@ -28,20 +28,60 @@ const ai = process.env.GEMINI_API_KEY
     })
   : null;
 
+// In-memory sliding window rate limiter
+const ipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string, maxReqs: number = 30, windowMs: number = 60000): boolean {
+  const now = Date.now();
+  const record = ipRateLimitMap.get(ip);
+  if (!record || now > record.resetAt) {
+    ipRateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (record.count >= maxReqs) return false;
+  record.count++;
+  return true;
+}
+
+const VALID_CATEGORIES = new Set([
+  'weather',
+  'music',
+  'break',
+  'smooth_driving',
+  'dhikr',
+  'trivia',
+  'spontaneous',
+  'random',
+]);
+
+function sanitizeInput(val: unknown, maxLen: number, fallback: string): string {
+  if (typeof val !== 'string') return fallback;
+  const cleaned = val.replace(/[\r\n\t]/g, ' ').replace(/[^\w\s.,!?'\-()#]/gi, '').trim();
+  return cleaned.slice(0, maxLen) || fallback;
+}
+
 /**
  * AI Companion Endpoint: Generates spontaneous, friendly travel buddy comments
  * as if Hoopo is a close friend riding in the passenger seat.
+ * Input is rigorously validated and rate-limited to avoid prompt manipulation.
  */
 app.post('/api/hoopo/companion-comment', async (req, res) => {
-  const {
-    userName = 'Friend',
-    category = 'spontaneous',
-    currentSpeed = 70,
-    speedLimit = 80,
-    weather = 'Clear',
-    nowPlaying = '',
-    tripMinutes = 20,
-  } = req.body;
+  const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (!checkRateLimit(clientIp, 40, 60000)) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded. Please wait a moment.',
+      comment: 'Cruising smoothly ahead! Safe driving is always our top priority.',
+      source: 'local_companion',
+    });
+  }
+
+  const rawCat = typeof req.body?.category === 'string' ? req.body.category.toLowerCase().trim() : 'spontaneous';
+  const category = VALID_CATEGORIES.has(rawCat) ? rawCat : 'spontaneous';
+  const userName = sanitizeInput(req.body?.userName, 30, 'Friend');
+  const weather = sanitizeInput(req.body?.weather, 40, 'Clear');
+  const nowPlaying = sanitizeInput(req.body?.nowPlaying, 60, 'Quran & Peaceful Roadtrip Radio');
+  const currentSpeed = Math.min(250, Math.max(0, Math.round(Number(req.body?.currentSpeed) || 0)));
+  const speedLimit = Math.min(160, Math.max(20, Math.round(Number(req.body?.speedLimit) || 80)));
+  const tripMinutes = Math.min(1440, Math.max(0, Math.round(Number(req.body?.tripMinutes) || 15)));
 
   if (!ai) {
     // Graceful fallback if GEMINI_API_KEY is not configured
@@ -51,23 +91,24 @@ app.post('/api/hoopo/companion-comment', async (req, res) => {
     });
   }
 
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    abortController.abort();
+  }, 2400);
+
   try {
     const prompt = `
 Context:
 - Friend's Name: ${userName}
-- Current Vehicle Speed: ${Math.round(currentSpeed)} km/h (posted speed limit: ${speedLimit} km/h)
+- Current Vehicle Speed: ${currentSpeed} km/h (posted speed limit: ${speedLimit} km/h)
 - Weather along route: ${weather}
-- Music/Audio in car: ${nowPlaying || 'Quran & Peaceful Roadtrip Radio'}
+- Music/Audio in car: ${nowPlaying}
 - Driving duration so far: ${tripMinutes} minutes
-- Target topic focus: ${category} (can be weather, what user is listening to, reminding for a short break/water, peaceful dhikr, or casual friendly banter).
+- Target topic focus: ${category} (weather, music, road break/water, peaceful dhikr, road trivia, or casual friendly banter).
 
 Task:
 Say a short, warm, natural remark (1 to 2 sentences max) to ${userName} in a friendly tone as their traveling companion. Always start with or include their name naturally.
 `;
-
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('AI response timeout')), 2200)
-    );
 
     const aiPromise = ai.models.generateContent({
       model: 'gemini-3.8-flash',
@@ -75,13 +116,16 @@ Say a short, warm, natural remark (1 to 2 sentences max) to ${userName} in a fri
       config: {
         systemInstruction:
           'You are Hoopo, a warm, caring, witty Muslim bird-drone companion traveling in the car with your close friend. Speak naturally, warmly, and casually—exactly like a loyal friend in the passenger seat. Max 1-2 spoken sentences. Never sound robotic or formal.',
+        abortSignal: abortController.signal,
       },
     });
 
-    const response = await Promise.race([aiPromise, timeoutPromise]);
+    const response = await aiPromise;
+    clearTimeout(timeoutId);
     const comment = response.text?.trim() || getFallbackComment(userName, category, weather, nowPlaying, tripMinutes);
     res.json({ comment, source: 'gemini_ai' });
   } catch (error) {
+    clearTimeout(timeoutId);
     res.json({
       comment: getFallbackComment(userName, category, weather, nowPlaying, tripMinutes),
       source: 'local_companion',
