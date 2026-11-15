@@ -198,16 +198,27 @@ const createOfflineAwareTileLayer = (url: string, options: L.TileLayerOptions): 
           .open('hoopo-offline-maps-v1')
           .then((cache) => cache.match(tileUrl))
           .then((cachedResponse) => {
-            if (cachedResponse) {
+            if (cachedResponse && cachedResponse.type !== 'opaque') {
               return cachedResponse.blob().then((blob) => {
+                // Opaque responses have unreadable bodies; send those requests through
+                // the service worker, which can return the cached response directly.
+                if (blob.size === 0) {
+                  tile.src = tileUrl;
+                  return;
+                }
                 const objectUrl = URL.createObjectURL(blob);
                 tile.onload = () => {
                   URL.revokeObjectURL(objectUrl);
                   done(null, tile);
                 };
+                tile.onerror = () => {
+                  URL.revokeObjectURL(objectUrl);
+                  tile.src = tileUrl;
+                };
                 tile.src = objectUrl;
               });
             } else {
+              // Let the service worker serve an opaque cached response, when available.
               tile.src = tileUrl;
             }
           })
@@ -1654,7 +1665,7 @@ export const MapCenter: React.FC<MapCenterProps> = ({
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Local Space Used</span>
+                <span className="text-[10px] text-slate-400 block">Local Space Used (est.)</span>
                 <span className="font-speed text-sm font-bold text-emerald-400">
                   {cachedSizeMb.toFixed(1)} MB
                 </span>
