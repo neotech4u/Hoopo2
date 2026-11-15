@@ -404,9 +404,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
       }
     }
 
-    let savedTilesCount = 0;
-    let totalBytesSaved = 0;
-
     try {
       if ('caches' in window) {
         const cache = await caches.open('hoopo-offline-maps-v1');
@@ -418,8 +415,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             const response = await fetch(url, { mode: 'cors' });
             if (response.ok) {
               const blob = await response.blob();
-              totalBytesSaved += blob.size;
-              savedTilesCount++;
               await cache.put(
                 url,
                 new Response(blob, {
@@ -433,8 +428,6 @@ export const MapCenter: React.FC<MapCenterProps> = ({
             // Fallback for tile servers requiring opaque/no-cors mode
             try {
               await cache.add(new Request(url, { mode: 'no-cors' }));
-              savedTilesCount++;
-              totalBytesSaved += 32768; // ~32KB typical tile size
             } catch {
               // Ignore failure, do not increment count
             }
@@ -449,9 +442,30 @@ export const MapCenter: React.FC<MapCenterProps> = ({
     }
 
     setCachingProgressPercent(100);
-    const addedMb = Math.round((totalBytesSaved / (1024 * 1024)) * 10) / 10;
-    const newCount = cachedTilesCount + savedTilesCount;
-    const newSize = Math.round((cachedSizeMb + addedMb) * 10) / 10;
+
+    // Count unique entries already present in CacheStorage so repeated saves do not inflate totals.
+    // Opaque tile responses cannot expose their byte length, so their size remains an estimate.
+    let newCount = 0;
+    let totalCacheBytes = 0;
+    try {
+      if ('caches' in window) {
+        const cache = await caches.open('hoopo-offline-maps-v1');
+        const tileRequests = (await cache.keys()).filter((request) => {
+          const host = new URL(request.url).hostname;
+          return host === 'tile.openstreetmap.org' || host === 'mt1.google.com';
+        });
+        newCount = tileRequests.length;
+        for (const request of tileRequests) {
+          const response = await cache.match(request);
+          if (!response) continue;
+          const blob = await response.clone().blob();
+          totalCacheBytes += blob.size || (response.type === 'opaque' ? 32 * 1024 : 0);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read cached tile totals:', e);
+    }
+    const newSize = Math.round((totalCacheBytes / (1024 * 1024)) * 10) / 10;
     const dateStr = new Date().toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
