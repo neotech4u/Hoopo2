@@ -310,7 +310,7 @@ export function formatPrayerAlert(userName: string, prayerName: string, minsRema
  */
 export function generateFriendlyCompanionComment(
   userName: string,
-  category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'random' | 'spontaneous',
+  category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'trivia' | 'random' | 'spontaneous',
   context?: {
     speed?: number;
     weatherCondition?: string;
@@ -325,9 +325,22 @@ export function generateFriendlyCompanionComment(
   switch (category) {
     case 'weather':
       if (context?.weatherCondition?.toLowerCase().includes('rain')) {
-        return `${cleanName}, skies look a bit overcast with rain on the horizon. Don't worry, my weather radar is tracking the clouds for us. Keep a safe following distance!`;
+        const rainyComments = [
+          `${cleanName}, looks like a gentle rainy spell today! The sound of raindrops on the windshield is so calming, but remember to keep double braking distance on slick roads.`,
+          `${cleanName}, skies look a bit overcast with rain on the horizon. Don't worry, my weather radar is tracking the clouds for us. Keep a safe following distance!`,
+          `${cleanName}, rainy road vibes today! Make sure the defogger is blowing warm air so your windshield stays crystal clear.`,
+        ];
+        return rainyComments[Math.floor(Math.random() * rainyComments.length)];
       }
-      return `${cleanName}, the skies are wonderfully clear today! Great natural lighting and crisp visibility for our journey. Alhamdulillah!`;
+      if (context?.weatherCondition?.toLowerCase().includes('cloud')) {
+        return `${cleanName}, pleasant cloudy weather today! No harsh sun glare, just cool breeze and smooth blue skies ahead.`;
+      }
+      const sunnyComments = [
+        `Hey ${cleanName}, today is such a gorgeous sunny day with clear blue skies! Perfect road visibility. Don't forget your sunglasses if the glare picks up!`,
+        `${cleanName}, the skies are wonderfully clear today! Great natural lighting and crisp visibility for our journey. Alhamdulillah!`,
+        `${cleanName}, crisp sunshine and open blue skies today! Great asphalt grip for smooth cruising.`,
+      ];
+      return sunnyComments[Math.floor(Math.random() * sunnyComments.length)];
 
     case 'music':
       if (context?.musicTrack?.toLowerCase().includes('quran') || context?.musicTrack?.toLowerCase().includes('mulk')) {
@@ -350,15 +363,31 @@ export function generateFriendlyCompanionComment(
     case 'dhikr':
       return `${cleanName}, SubhanAllah, look at the horizon ahead. The Prophet taught us that journeys are filled with barakah when we remember Allah along the way.`;
 
+    case 'trivia':
+      const roadTrivia = [
+        `${cleanName}, do you know? Using gentle engine braking when slowing down saves brake pads and cuts fuel consumption to almost zero during overrun!`,
+        `${cleanName}, do you know? Tire pressure drops by about 1 to 2 PSI for every 10-degree dip in ambient temperature. Worth checking when we next pull into a fuel bunk!`,
+        `${cleanName}, do you know? Studies show that taking a quick sip of water increases driver alertness by over 20% on long monotonous highway stretches.`,
+        `${cleanName}, do you know? Listening to gentle, rhythmic recitations while driving significantly reduces driver stress and heart rate in heavy highway traffic.`,
+        `${cleanName}, do you know? Cruising smoothly around 75 to 80 km/h is the aerodynamic sweet spot for most cars—saving up to 20% fuel compared to speeding up and braking!`,
+        `${cleanName}, do you know? The hoopoe bird has remarkable orientation instincts, navigating across thousands of kilometers across continents without ever getting lost!`,
+        `${cleanName}, do you know? Keeping your windshield inside glass clean prevents night headlight glare from scattering into your eyes.`,
+        `${cleanName}, do you know? Driving with correctly aligned wheels not only prevents pulling to one side, but extends tire life by over 15,000 kilometers!`,
+      ];
+      return roadTrivia[Math.floor(Math.random() * roadTrivia.length)];
+
     default:
       const generalFriendComments = [
         `${cleanName}, having a wonderful time riding shotgun with you today! How's the journey feeling so far?`,
         `${cleanName}, road ahead is wide open and peaceful. Just sitting back and enjoying the drive together with you!`,
+        `Hey ${cleanName}, just a friendly reminder to unclench your jaw and drop your shoulders. Safe and relaxed driving is the best driving!`,
         `${cleanName}, pro-driver tip: maintaining steady pressure on the accelerator rather than tapping it can improve mileage by up to 15%. You're already doing great!`,
-        `${cleanName}, Alhamdulillah for safe passage. Remember to take a deep breath and take in the view outside your window.`,
+        `${cleanName}, Alhamdulillah for safe passage and modern highways. Imagine our ancestors traversing these distances on camel caravans over months!`,
         `${cleanName}, we're making good time today! Let me know if you want to locate a good roadside dhaba, prayer spot, or fuel station anytime.`,
         `Hey ${cleanName}, just checking in on you! Road trips are best when you're relaxed. Feeling fresh behind the wheel?`,
         `${cleanName}, love the peaceful cabin ambiance today. Where are we heading after our main stop?`,
+        `${cleanName}, just taking in the steady rhythm of our engine today. Everything is running smooth as silk!`,
+        `${cleanName}, traveling with good company makes any highway feel half as long. Truly enjoying our trip today!`,
       ];
       return generalFriendComments[Math.floor(Math.random() * generalFriendComments.length)];
   }
@@ -427,6 +456,18 @@ export function generateCompanionDialogueReply(
     query.includes('gas')
   ) {
     return `${cleanName}, fuel monitoring is active. Whenever you need a top-up, check the fuel stations layer on our cockpit map!`;
+  }
+
+  if (
+    query.includes('note') ||
+    query.includes('remember') ||
+    query.includes('remind')
+  ) {
+    return `${cleanName}, voice note recorded safely! You can review or play back your notes anytime from the Voice Notes panel in the cockpit.`;
+  }
+
+  if (query.includes('trivia') || query.includes('do you know') || query.includes('fact')) {
+    return `${cleanName}, do you know? Cruising smoothly around 75 to 80 km/h is the aerodynamic sweet spot for most cars—saving up to 20% fuel compared to rapid acceleration!`;
   }
 
   if (query.includes('speed') || query.includes('fast') || query.includes('slow')) {
@@ -640,11 +681,27 @@ export function calculateDrivingRating(
 }
 
 export function parseVoiceCommand(transcript: string): {
-  intent: 'NAVIGATE' | 'FUEL' | 'PRAYER' | 'RADIO' | 'WEATHER' | 'SPEED' | 'UNKNOWN';
+  intent: 'NAVIGATE' | 'FUEL' | 'PRAYER' | 'RADIO' | 'WEATHER' | 'SPEED' | 'VOICE_NOTE' | 'UNKNOWN';
   query?: string;
   action?: string;
 } {
   const clean = transcript.toLowerCase().trim();
+
+  if (
+    clean.includes('take a note') ||
+    clean.includes('record a note') ||
+    clean.includes('voice note') ||
+    clean.includes('remember this') ||
+    clean.includes('quick note') ||
+    clean.startsWith('note:') ||
+    clean.startsWith('note that')
+  ) {
+    const extracted = clean
+      .replace(/take a note|record a note|voice note|remember this|quick note|note:|note that/gi, '')
+      .replace(/^[:\s,-]+/, '')
+      .trim();
+    return { intent: 'VOICE_NOTE', query: extracted, action: 'create_voice_note' };
+  }
 
   if (clean.includes('navigate') || clean.includes('go to') || clean.includes('route') || clean.includes('drive to')) {
     const query = clean.replace(/navigate to|go to|route to|drive to/i, '').trim();

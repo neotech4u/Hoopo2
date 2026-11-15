@@ -142,9 +142,27 @@ test('generateFriendlyCompanionComment creates personalized comments with user n
   assert.ok(weatherComment.includes('Fatima'));
   assert.ok(weatherComment.includes('skies'));
 
+  const rainyWeather = generateFriendlyCompanionComment('Fatima', 'weather', { weatherCondition: 'Rain' });
+  assert.ok(rainyWeather.includes('Fatima'));
+  assert.ok(rainyWeather.toLowerCase().includes('rain'));
+
+  const triviaComment = generateFriendlyCompanionComment('Usman', 'trivia');
+  assert.ok(triviaComment.includes('Usman'));
+  assert.ok(triviaComment.toLowerCase().includes('do you know'));
+
   const breakComment = generateFriendlyCompanionComment('Mustafa', 'break', { tripMinutes: 50 });
   assert.ok(breakComment.includes('Mustafa'));
   assert.ok(breakComment.includes('hydrated'));
+});
+
+test('parseVoiceCommand identifies voice notes and navigation intents', () => {
+  const noteCmd = parseVoiceCommand('Take a note check tire pressure at 33 PSI');
+  assert.equal(noteCmd.intent, 'VOICE_NOTE');
+  assert.equal(noteCmd.query, 'check tire pressure at 33 psi');
+
+  const navCmd = parseVoiceCommand('Navigate to Tirunelveli');
+  assert.equal(navCmd.intent, 'NAVIGATE');
+  assert.equal(navCmd.query, 'tirunelveli');
 });
 
 test('calculateDrivingRating personalizes feedback and calculates grades', () => {

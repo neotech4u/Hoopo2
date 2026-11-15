@@ -29,6 +29,7 @@ import {
   Sliders,
   Settings,
   AlertOctagon,
+  FileAudio,
 } from 'lucide-react';
 
 import { SpeedGauge } from './components/SpeedGauge';
@@ -46,12 +47,18 @@ import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { EmergencyCrashModal } from './components/EmergencyCrashModal';
+import { QuickVoiceNotesModal } from './components/QuickVoiceNotesModal';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 import {
   EmergencyContact,
   getStoredEmergencyContact,
   evaluateCrashImpact,
 } from './utils/emergencySos';
+import {
+  VoiceNote,
+  getStoredVoiceNotes,
+  createVoiceNote,
+} from './utils/voiceNotes';
 
 import {
   checkSpeedSafety,
@@ -413,6 +420,11 @@ export default function App() {
     } catch {}
   }, [tripLogs]);
 
+  // Voice Notes State
+  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>(() => getStoredVoiceNotes());
+  const [showVoiceNotesModal, setShowVoiceNotesModal] = useState(false);
+  const [initialOpenRecordNote, setInitialOpenRecordNote] = useState(false);
+
   // 8. Radio cum FM State
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
   const [radioFreq, setRadioFreq] = useState(89.2);
@@ -527,7 +539,7 @@ export default function App() {
 
   // 14. Request AI Companion Comment via Server-Side Gemini API or Local Engine
   const handleRequestAIComment = async (
-    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous'
+    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'trivia' | 'spontaneous'
   ): Promise<string | void> => {
     try {
       const response = await fetch('/api/hoopo/companion-comment', {
@@ -718,6 +730,20 @@ export default function App() {
           `${userName}, current speed is ${Math.round(currentSpeed)} km/h. Speed limit is ${speedLimit} km/h.`
         );
         break;
+      case 'VOICE_NOTE':
+        if (cmd.query) {
+          const newNote = createVoiceNote(cmd.query, {
+            lat: realUserLocation ? realUserLocation[0] : undefined,
+            lng: realUserLocation ? realUserLocation[1] : undefined,
+            speedKmH: Math.round(currentSpeed),
+          });
+          setVoiceNotes((prev) => [newNote, ...prev.filter((n) => n.id !== newNote.id)]);
+          speakHoopoMessage(`Voice note saved for ${userName}: "${cmd.query}".`);
+        } else {
+          setInitialOpenRecordNote(true);
+          setShowVoiceNotesModal(true);
+        }
+        break;
     }
   };
 
@@ -842,6 +868,21 @@ export default function App() {
           >
             <RouteIcon className="w-3.5 h-3.5 text-blue-400" />
             <span className="hidden sm:inline">Trips ({tripLogs.length})</span>
+          </button>
+
+          {/* Quick Voice Notes */}
+          <button
+            type="button"
+            onClick={() => {
+              setInitialOpenRecordNote(false);
+              setShowVoiceNotesModal(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-cyan-500/40 text-xs font-bold text-cyan-300 transition-colors shadow-sm"
+            aria-label="Open Quick Voice Notes"
+            title="Voice-Activated Road Notes & Reminders"
+          >
+            <FileAudio className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Notes ({voiceNotes.length})</span>
           </button>
 
           {/* Voice Assistant */}
@@ -983,6 +1024,10 @@ export default function App() {
               onFinishRide={handleFinishRide}
               onOpenPetrolModal={() => setShowPetrolModal(true)}
               onOpenTripModal={() => setShowTripModal(true)}
+              onOpenVoiceNotesModal={(startRecord) => {
+                setInitialOpenRecordNote(!!startRecord);
+                setShowVoiceNotesModal(true);
+              }}
               onRequestAIComment={handleRequestAIComment}
             />
           </div>
@@ -1132,6 +1177,18 @@ export default function App() {
         isOpen={showVoiceModal}
         onClose={() => setShowVoiceModal(false)}
         onExecuteCommand={handleExecuteVoiceCommand}
+      />
+
+      {/* Voice-Activated Quick Voice Notes Modal */}
+      <QuickVoiceNotesModal
+        isOpen={showVoiceNotesModal}
+        onClose={() => setShowVoiceNotesModal(false)}
+        voiceNotes={voiceNotes}
+        onNotesChange={setVoiceNotes}
+        currentSpeed={currentSpeed}
+        currentCoords={realUserLocation}
+        userName={userName}
+        initialOpenRecord={initialOpenRecordNote}
       />
     </div>
   );

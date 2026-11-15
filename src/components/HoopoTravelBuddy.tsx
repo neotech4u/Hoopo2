@@ -18,9 +18,11 @@ import {
   Send,
   Mic,
   MessageSquare,
+  FileAudio,
 } from 'lucide-react';
 import { HoopoMascot, HoopoMood } from './HoopoMascot';
 import { soundEngine, speakHoopoMessage } from '../utils/audioSynthesizer';
+import { parseVoiceNoteTrigger, createVoiceNote } from '../utils/voiceNotes';
 import {
   WeatherCondition,
   PrayerTime,
@@ -64,7 +66,8 @@ interface HoopoTravelBuddyProps {
   onFinishRide?: () => void;
   onOpenPetrolModal?: () => void;
   onOpenTripModal?: () => void;
-  onRequestAIComment?: (category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous') => Promise<string | void>;
+  onOpenVoiceNotesModal?: (startRecord?: boolean) => void;
+  onRequestAIComment?: (category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'trivia' | 'spontaneous') => Promise<string | void>;
 }
 
 export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
@@ -87,6 +90,7 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
   onFinishRide,
   onOpenPetrolModal,
   onOpenTripModal,
+  onOpenVoiceNotesModal,
   onRequestAIComment,
 }) => {
   const [activeAlert, setActiveAlert] = useState<HoopoNotification | null>(null);
@@ -268,12 +272,13 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
           // Set next random interval (always > 220 seconds)
           nextSpontaneousGapMsRef.current = 225000 + Math.floor(Math.random() * 110000);
 
-          const categories: Array<'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous'> = [
+          const categories: Array<'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'trivia' | 'spontaneous'> = [
             'weather',
             'music',
             'break',
             'smooth_driving',
             'dhikr',
+            'trivia',
             'spontaneous',
           ];
           const chosenCategory = categories[Math.floor(Math.random() * categories.length)];
@@ -297,6 +302,38 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     if (!text) return;
 
     setUserReplyInput('');
+
+    // Check for hands-free Voice Note command
+    const voiceNoteCheck = parseVoiceNoteTrigger(text);
+    if (voiceNoteCheck.isVoiceNoteTrigger) {
+      if (voiceNoteCheck.noteContent) {
+        createVoiceNote(voiceNoteCheck.noteContent, {
+          speedKmH: Math.round(currentSpeed),
+        });
+        const reply = `${userName}, saved your voice note: "${voiceNoteCheck.noteContent}". Logged safely in your notes!`;
+        soundEngine.playGreetingChime();
+        if (voiceEnabled) speakHoopoMessage(reply);
+        setActiveAlert({
+          id: `vn-${Date.now()}`,
+          type: 'companion',
+          title: `Voice Note Saved • ${userName}`,
+          message: reply,
+          actionText: 'Open Notes',
+          onAction: () => onOpenVoiceNotesModal?.(false),
+          timestamp: new Date(),
+        });
+        setLastSpontaneousSpokeTime(Date.now());
+        return;
+      } else {
+        onOpenVoiceNotesModal?.(true);
+        const reply = `Opening voice note recorder for you, ${userName}!`;
+        soundEngine.playGreetingChime();
+        if (voiceEnabled) speakHoopoMessage(reply);
+        setLastSpontaneousSpokeTime(Date.now());
+        return;
+      }
+    }
+
     setIsAiLoading(true);
     setMood('greeting');
     setIsFlapping(true);
@@ -371,9 +408,9 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
     }
   };
 
-  // Trigger Friendly Companion Talk (Weather, Music, Short Break, or Dhikr) casually
+  // Trigger Friendly Companion Talk (Weather, Music, Short Break, Dhikr, or Road Trivia) casually
   const triggerCasualCompanionBanter = async (
-    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'spontaneous',
+    category: 'weather' | 'music' | 'break' | 'smooth_driving' | 'dhikr' | 'trivia' | 'spontaneous',
     manualTap: boolean = false
   ) => {
     setIsAiLoading(true);
@@ -449,29 +486,44 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
           </div>
         </div>
 
-        {/* Voice Toggle */}
-        <button
-          type="button"
-          onClick={onToggleVoice}
-          className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] font-semibold transition-all ${
-            voiceEnabled
-              ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
-              : 'bg-slate-800 border-slate-700 text-slate-400'
-          }`}
-          aria-label={voiceEnabled ? 'Mute Drone Voice' : 'Enable Drone Voice'}
-        >
-          {voiceEnabled ? (
-            <>
-              <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Voice ON</span>
-            </>
-          ) : (
-            <>
-              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-              <span>Muted</span>
-            </>
+        <div className="flex items-center gap-1.5">
+          {onOpenVoiceNotesModal && (
+            <button
+              type="button"
+              onClick={() => onOpenVoiceNotesModal(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-cyan-500/50 bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 text-[11px] font-semibold transition-all shadow-sm active:scale-95"
+              title="Record Quick Voice Note"
+              aria-label="Record Quick Voice Note"
+            >
+              <FileAudio className="w-3 h-3 text-cyan-400" />
+              <span>Note</span>
+            </button>
           )}
-        </button>
+
+          {/* Voice Toggle */}
+          <button
+            type="button"
+            onClick={onToggleVoice}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] font-semibold transition-all ${
+              voiceEnabled
+                ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
+                : 'bg-slate-800 border-slate-700 text-slate-400'
+            }`}
+            aria-label={voiceEnabled ? 'Mute Drone Voice' : 'Enable Drone Voice'}
+          >
+            {voiceEnabled ? (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Voice ON</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                <span>Muted</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Futuristic Animated Hoopoe AI Nexus & Interactive Speech Bubble */}
@@ -533,6 +585,8 @@ export const HoopoTravelBuddy: React.FC<HoopoTravelBuddyProps> = ({
         {/* Quick Driver Response Chips */}
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
           {[
+            { label: "Voice Note", text: "Take a voice note" },
+            { label: "Car Trivia", text: "Tell me a car trivia" },
             { label: "Route ahead?", text: "How is the road ahead?" },
             { label: "Rest plaza?", text: "Where can we take a quick rest break?" },
             { label: "Travel tip", text: "Give me a road trip tip" },

@@ -99,6 +99,11 @@ export const VoiceNavigationModal: React.FC<VoiceNavigationModalProps> = ({
       case 'SPEED':
         reply = 'Current speed limit is 80 km/h. Drive safely and arrive in peace.';
         break;
+      case 'VOICE_NOTE':
+        reply = parsed.query
+          ? `Voice note recorded: "${parsed.query}". Logged safely in your notes.`
+          : 'Opening your voice note recorder now.';
+        break;
       default:
         reply = `I heard: "${text}". Hoopo is keeping our drive safe and blessed.`;
     }
@@ -109,6 +114,7 @@ export const VoiceNavigationModal: React.FC<VoiceNavigationModalProps> = ({
   };
 
   const sampleCommands = [
+    { text: 'Take a quick voice note', icon: Mic },
     { text: 'Navigate to Grand Mosque', icon: Navigation },
     { text: 'Find nearest fuel station', icon: Fuel },
     { text: 'What is next prayer time?', icon: Clock },
