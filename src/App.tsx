@@ -46,6 +46,7 @@ import { TripLogModal } from './components/TripLogModal';
 import { DrivingRatingModal } from './components/DrivingRatingModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { QuickVoiceNotesModal } from './components/QuickVoiceNotesModal';
+import { BootLoadingScreen } from './components/BootLoadingScreen';
 import { calculateOfflinePrayerSchedule } from './utils/astronomicalPrayerTimes';
 import {
   VoiceNote,
@@ -253,6 +254,9 @@ export default function App() {
       speakHoopoMessage(`Nice to meet you, ${newName}! I am Hoopo, your road companion.`);
     }
   };
+
+  // 1.5. Boot Loading Screen State
+  const [isBootLoading, setIsBootLoading] = useState(true);
 
   // 2. Modals & Greetings
   const [showDuaModal, setShowDuaModal] = useState(!isAutoStart);
@@ -1165,6 +1169,15 @@ export default function App() {
         userName={userName}
         initialOpenRecord={initialOpenRecordNote}
       />
+
+      {/* Bootloading Screen */}
+      {isBootLoading && (
+        <BootLoadingScreen
+          onComplete={() => {
+            setIsBootLoading(false);
+          }}
+        />
+      )}
     </div>
   );
 }
